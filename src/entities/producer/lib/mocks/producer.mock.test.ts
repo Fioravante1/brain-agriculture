@@ -6,7 +6,7 @@ jest.mock('uuid', () => ({
 }));
 
 // Mock do FARMS_MOCK
-jest.mock('../../../farm/lib/mocks', () => ({
+jest.mock('@/entities/farm', () => ({
   FARMS_MOCK: [
     { id: '1', producerId: '1', name: 'Fazenda A', totalArea: 100 },
     { id: '2', producerId: '1', name: 'Fazenda B', totalArea: 200 },
