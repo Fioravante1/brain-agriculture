@@ -34,7 +34,9 @@ const createTestQueryClient = () =>
 // Wrapper para React Query
 const createWrapper = () => {
   const queryClient = createTestQueryClient();
-  return ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  const Wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  Wrapper.displayName = 'TestWrapper';
+  return Wrapper;
 };
 
 describe('Producer Hooks', () => {
@@ -171,7 +173,7 @@ describe('Producer Hooks', () => {
     });
 
     it('não deve executar query quando ID é undefined', () => {
-      renderHook(() => useProducer(undefined as any), {
+      renderHook(() => useProducer(undefined as unknown as string), {
         wrapper: createWrapper(),
       });
 
