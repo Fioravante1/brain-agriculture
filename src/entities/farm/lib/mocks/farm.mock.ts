@@ -1,0 +1,190 @@
+import { v4 as uuidv4 } from 'uuid';
+import { Farm } from '../../model';
+
+export const FARMS_MOCK: Farm[] = [
+  {
+    id: uuidv4(),
+    producerId: '1',
+    name: 'Fazenda Boa Vista',
+    city: 'Ribeirão Preto',
+    state: 'SP',
+    totalArea: 1000,
+    arableArea: 700,
+    vegetationArea: 300,
+    farmCrops: [
+      {
+        id: uuidv4(),
+        farmId: '1',
+        harvestId: '2023',
+        cropId: 'soja',
+      },
+      {
+        id: uuidv4(),
+        farmId: '1',
+        harvestId: '2023',
+        cropId: 'milho',
+      },
+    ],
+    producer: {
+      id: '1',
+      name: 'João Silva',
+      cpfCnpj: '12345678901',
+    },
+  },
+  {
+    id: uuidv4(),
+    producerId: '1',
+    name: 'Fazenda Santa Clara',
+    city: 'Campinas',
+    state: 'SP',
+    totalArea: 800,
+    arableArea: 600,
+    vegetationArea: 200,
+    farmCrops: [
+      {
+        id: uuidv4(),
+        farmId: '2',
+        harvestId: '2024',
+        cropId: 'cafe',
+      },
+    ],
+    producer: {
+      id: '1',
+      name: 'João Silva',
+      cpfCnpj: '12345678901',
+    },
+  },
+  {
+    id: uuidv4(),
+    producerId: '2',
+    name: 'Fazenda Progresso',
+    city: 'Uberlândia',
+    state: 'MG',
+    totalArea: 2500,
+    arableArea: 2000,
+    vegetationArea: 500,
+    farmCrops: [
+      {
+        id: uuidv4(),
+        farmId: '3',
+        harvestId: '2023',
+        cropId: 'soja',
+      },
+      {
+        id: uuidv4(),
+        farmId: '3',
+        harvestId: '2024',
+        cropId: 'milho',
+      },
+    ],
+    producer: {
+      id: '2',
+      name: 'Maria Santos',
+      cpfCnpj: '12345678000195',
+    },
+  },
+  {
+    id: uuidv4(),
+    producerId: '2',
+    name: 'Fazenda Esperança',
+    city: 'Uberaba',
+    state: 'MG',
+    totalArea: 1500,
+    arableArea: 1200,
+    vegetationArea: 300,
+    farmCrops: [
+      {
+        id: uuidv4(),
+        farmId: '4',
+        harvestId: '2024',
+        cropId: 'algodao',
+      },
+    ],
+    producer: {
+      id: '2',
+      name: 'Maria Santos',
+      cpfCnpj: '12345678000195',
+    },
+  },
+  {
+    id: uuidv4(),
+    producerId: '3',
+    name: 'Fazenda Palmeiras',
+    city: 'Rio Verde',
+    state: 'GO',
+    totalArea: 3000,
+    arableArea: 2500,
+    vegetationArea: 500,
+    farmCrops: [
+      {
+        id: uuidv4(),
+        farmId: '5',
+        harvestId: '2023',
+        cropId: 'cana',
+      },
+      {
+        id: uuidv4(),
+        farmId: '5',
+        harvestId: '2024',
+        cropId: 'soja',
+      },
+    ],
+    producer: {
+      id: '3',
+      name: 'Pedro Costa',
+      cpfCnpj: '98765432100',
+    },
+  },
+  {
+    id: uuidv4(),
+    producerId: '4',
+    name: 'Fazenda Sul Brasil',
+    city: 'Passo Fundo',
+    state: 'RS',
+    totalArea: 1800,
+    arableArea: 1400,
+    vegetationArea: 400,
+    farmCrops: [
+      {
+        id: uuidv4(),
+        farmId: '6',
+        harvestId: '2024',
+        cropId: 'milho',
+      },
+    ],
+    producer: {
+      id: '4',
+      name: 'Ana Oliveira',
+      cpfCnpj: '11122233344',
+    },
+  },
+  {
+    id: uuidv4(),
+    producerId: '4',
+    name: 'Fazenda Planalto',
+    city: 'Cruz Alta',
+    state: 'RS',
+    totalArea: 2200,
+    arableArea: 1800,
+    vegetationArea: 400,
+    farmCrops: [
+      {
+        id: uuidv4(),
+        farmId: '7',
+        harvestId: '2023',
+        cropId: 'soja',
+      },
+      {
+        id: uuidv4(),
+        farmId: '7',
+        harvestId: '2024',
+        cropId: 'milho',
+      },
+    ],
+    producer: {
+      id: '4',
+      name: 'Ana Oliveira',
+      cpfCnpj: '11122233344',
+    },
+  },
+];
