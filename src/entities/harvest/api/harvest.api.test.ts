@@ -1,5 +1,37 @@
 import { harvestApi } from './harvest.api';
-import { Harvest, HarvestFormData } from '../model';
+import { HarvestFormData } from '../model';
+
+// Mock dos dados de safra para evitar problemas com uuid
+const HARVESTS_MOCK = [
+  {
+    id: '1',
+    year: 2021,
+    name: 'Safra 2021',
+    createdAt: new Date('2021-01-01'),
+    updatedAt: new Date('2021-01-01'),
+  },
+  {
+    id: '2',
+    year: 2022,
+    name: 'Safra 2022',
+    createdAt: new Date('2022-01-01'),
+    updatedAt: new Date('2022-01-01'),
+  },
+  {
+    id: '3',
+    year: 2023,
+    name: 'Safra 2023',
+    createdAt: new Date('2023-01-01'),
+    updatedAt: new Date('2023-01-01'),
+  },
+  {
+    id: '4',
+    year: 2024,
+    name: 'Safra 2024',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+  },
+];
 
 // Mock do fetch global
 const mockFetch = jest.fn();
@@ -12,33 +44,9 @@ describe('Harvest API', () => {
 
   describe('getAll', () => {
     it('deve retornar lista de safras quando API responde com sucesso', async () => {
-      const mockHarvests: Harvest[] = [
-        {
-          id: '1',
-          name: 'Safra 2021',
-          year: 2021,
-          createdAt: new Date('2021-01-01'),
-          updatedAt: new Date('2021-01-01'),
-        },
-        {
-          id: '2',
-          name: 'Safra 2022',
-          year: 2022,
-          createdAt: new Date('2022-01-01'),
-          updatedAt: new Date('2022-01-01'),
-        },
-        {
-          id: '3',
-          name: 'Safra 2023',
-          year: 2023,
-          createdAt: new Date('2023-01-01'),
-          updatedAt: new Date('2023-01-01'),
-        },
-      ];
-
       const mockResponse = {
         success: true,
-        data: mockHarvests,
+        data: HARVESTS_MOCK,
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -49,7 +57,7 @@ describe('Harvest API', () => {
       const result = await harvestApi.getAll();
 
       expect(mockFetch).toHaveBeenCalledWith('/api/harvests');
-      expect(result).toEqual(mockHarvests);
+      expect(result).toEqual(HARVESTS_MOCK);
     });
 
     it('deve lançar erro quando resposta não é ok', async () => {
@@ -105,13 +113,7 @@ describe('Harvest API', () => {
 
   describe('getById', () => {
     it('deve retornar safra quando encontrada', async () => {
-      const mockHarvest: Harvest = {
-        id: '1',
-        name: 'Safra 2021',
-        year: 2021,
-        createdAt: new Date('2021-01-01'),
-        updatedAt: new Date('2021-01-01'),
-      };
+      const mockHarvest = HARVESTS_MOCK[0];
 
       const mockResponse = {
         success: true,
@@ -186,13 +188,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '4',
-        name: 'Safra 2024',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      const mockHarvest = HARVESTS_MOCK[3]; // Safra 2024
 
       const mockResponse = {
         success: true,
@@ -280,13 +276,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '4',
-        name: 'Safra 2024 Atualizada',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-02'),
-      };
+      const mockHarvest = { ...HARVESTS_MOCK[3], name: 'Safra 2024 Atualizada' };
 
       const mockResponse = {
         success: true,
@@ -432,13 +422,7 @@ describe('Harvest API', () => {
 
   describe('Validação de parâmetros', () => {
     it('deve chamar getById com ID correto', async () => {
-      const mockHarvest: Harvest = {
-        id: '123',
-        name: 'Safra 2021',
-        year: 2021,
-        createdAt: new Date('2021-01-01'),
-        updatedAt: new Date('2021-01-01'),
-      };
+      const mockHarvest = HARVESTS_MOCK[0];
 
       const mockResponse = {
         success: true,
@@ -461,13 +445,7 @@ describe('Harvest API', () => {
         year: 2021,
       };
 
-      const mockHarvest: Harvest = {
-        id: '123',
-        name: 'Safra 2021',
-        year: 2021,
-        createdAt: new Date('2021-01-01'),
-        updatedAt: new Date('2021-01-01'),
-      };
+      const mockHarvest = HARVESTS_MOCK[0];
 
       const mockResponse = {
         success: true,
@@ -515,13 +493,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '4',
-        name: 'Safra 2024',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      const mockHarvest = HARVESTS_MOCK[3];
 
       const mockResponse = {
         success: true,
@@ -550,13 +522,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '4',
-        name: 'Safra 2024',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      const mockHarvest = HARVESTS_MOCK[3];
 
       const mockResponse = {
         success: true,
@@ -582,26 +548,9 @@ describe('Harvest API', () => {
 
   describe('Estrutura de dados', () => {
     it('deve retornar safras com estrutura correta', async () => {
-      const mockHarvests: Harvest[] = [
-        {
-          id: '1',
-          name: 'Safra 2021',
-          year: 2021,
-          createdAt: new Date('2021-01-01'),
-          updatedAt: new Date('2021-01-01'),
-        },
-        {
-          id: '2',
-          name: 'Safra 2022',
-          year: 2022,
-          createdAt: new Date('2022-01-01'),
-          updatedAt: new Date('2022-01-01'),
-        },
-      ];
-
       const mockResponse = {
         success: true,
-        data: mockHarvests,
+        data: HARVESTS_MOCK,
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -611,7 +560,7 @@ describe('Harvest API', () => {
 
       const result = await harvestApi.getAll();
 
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(4);
       expect(result[0]).toHaveProperty('id');
       expect(result[0]).toHaveProperty('name');
       expect(result[0]).toHaveProperty('year');
@@ -630,13 +579,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '5',
-        name: 'Safra 2024',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      const mockHarvest = HARVESTS_MOCK[3];
 
       const mockResponse = {
         success: true,
@@ -665,13 +608,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '5',
-        name: 'Safra 2024 Atualizada',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-02'),
-      };
+      const mockHarvest = { ...HARVESTS_MOCK[3], name: 'Safra 2024 Atualizada' };
 
       const mockResponse = {
         success: true,
@@ -702,13 +639,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '6',
-        name: 'Safra 2024 & Colheita',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      const mockHarvest = { ...HARVESTS_MOCK[3], name: 'Safra 2024 & Colheita' };
 
       const mockResponse = {
         success: true,
@@ -738,13 +669,7 @@ describe('Harvest API', () => {
         year: 2024,
       };
 
-      const mockHarvest: Harvest = {
-        id: '7',
-        name: 'Safra 2024 - Colheita de Soja e Milho',
-        year: 2024,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      const mockHarvest = { ...HARVESTS_MOCK[3], name: 'Safra 2024 - Colheita de Soja e Milho' };
 
       const mockResponse = {
         success: true,
@@ -767,13 +692,7 @@ describe('Harvest API', () => {
         year: 2025,
       };
 
-      const mockHarvest: Harvest = {
-        id: '8',
-        name: 'Safra 2025',
-        year: 2025,
-        createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01'),
-      };
+      const mockHarvest = { ...HARVESTS_MOCK[3], name: 'Safra 2025', year: 2025 };
 
       const mockResponse = {
         success: true,
@@ -813,13 +732,7 @@ describe('Harvest API', () => {
         year: 1990,
       };
 
-      const mockHarvest: Harvest = {
-        id: '9',
-        name: 'Safra Histórica',
-        year: 1990,
-        createdAt: new Date('1990-01-01'),
-        updatedAt: new Date('1990-01-01'),
-      };
+      const mockHarvest = { ...HARVESTS_MOCK[3], name: 'Safra Histórica', year: 1990 };
 
       const mockResponse = {
         success: true,
@@ -842,13 +755,7 @@ describe('Harvest API', () => {
         year: 2030,
       };
 
-      const mockHarvest: Harvest = {
-        id: '10',
-        name: 'Safra Futura',
-        year: 2030,
-        createdAt: new Date('2030-01-01'),
-        updatedAt: new Date('2030-01-01'),
-      };
+      const mockHarvest = { ...HARVESTS_MOCK[3], name: 'Safra Futura', year: 2030 };
 
       const mockResponse = {
         success: true,
