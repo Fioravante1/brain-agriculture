@@ -1,4 +1,4 @@
-import { Farm } from '../../farm/model';
+import { Farm } from '@/entities/farm';
 
 /**
  * Produtor Rural
