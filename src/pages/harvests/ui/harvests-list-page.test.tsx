@@ -2,7 +2,6 @@ import { fireEvent, renderWithTheme, screen } from '@/shared/lib/test-utils';
 import { HarvestsListPage } from './harvests-list-page';
 import { Harvest } from '@/entities/harvest';
 
-// Mock do useRouter
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -10,7 +9,51 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
-// Mock dos hooks de entidades
+const mockUseHarvestsListPage = jest.fn();
+jest.mock('@/features/harvests', () => ({
+  HarvestForm: jest.fn(({ onSubmit, onCancel, defaultValues, isLoading }) => (
+    <form onSubmit={onSubmit} data-testid='harvest-form'>
+      <input data-testid='harvest-name-input' defaultValue={defaultValues?.name || ''} />
+      <input data-testid='harvest-year-input' defaultValue={defaultValues?.year || ''} />
+      <button type='button' onClick={onCancel}>
+        Cancelar
+      </button>
+      <button type='submit' disabled={isLoading}>
+        Salvar
+      </button>
+    </form>
+  )),
+  useHarvestsListPage: () => mockUseHarvestsListPage(),
+}));
+
+jest.mock('@/features/harvests/config/harvests-table-columns', () => ({
+  HARVESTS_TABLE_COLUMNS: [
+    {
+      key: 'name',
+      header: 'Nome da Safra',
+      width: '40%',
+    },
+    {
+      key: 'year',
+      header: 'Ano',
+      width: '20%',
+      render: (harvest: any) => harvest.year.toString(),
+    },
+    {
+      key: 'createdAt',
+      header: 'Criada em',
+      width: '20%',
+      render: (harvest: any) => new Date(harvest.createdAt).toLocaleDateString('pt-BR'),
+    },
+    {
+      key: 'actions',
+      header: 'Ações',
+      width: '20%',
+      render: (harvest: any) => harvest.name,
+    },
+  ],
+}));
+
 const mockHarvests: Harvest[] = [
   {
     id: '1',
@@ -35,43 +78,31 @@ const mockHarvests: Harvest[] = [
   },
 ];
 
-const mockUseHarvests = jest.fn();
-const mockUseCreateHarvest = jest.fn();
-const mockUseUpdateHarvest = jest.fn();
-const mockUseDeleteHarvest = jest.fn();
-
-jest.mock('@/entities/harvest', () => ({
-  useHarvests: () => mockUseHarvests(),
-  useCreateHarvest: () => mockUseCreateHarvest(),
-  useUpdateHarvest: () => mockUseUpdateHarvest(),
-  useDeleteHarvest: () => mockUseDeleteHarvest(),
-}));
-
-// Mock do componente HarvestForm
-jest.mock('@/features/harvests', () => ({
-  HarvestForm: jest.fn(({ onSubmit, onCancel, defaultValues, isLoading }) => (
-    <form onSubmit={onSubmit} data-testid='harvest-form'>
-      <input data-testid='harvest-name-input' defaultValue={defaultValues?.name || ''} />
-      <input data-testid='harvest-year-input' defaultValue={defaultValues?.year || ''} />
-      <button type='button' onClick={onCancel}>
-        Cancelar
-      </button>
-      <button type='submit' disabled={isLoading}>
-        Salvar
-      </button>
-    </form>
-  )),
-}));
-
 describe('Componente HarvestsListPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseHarvests.mockReturnValue({ data: mockHarvests, isLoading: false });
-    mockUseCreateHarvest.mockReturnValue({ mutate: jest.fn(), isPending: false });
-    mockUseUpdateHarvest.mockReturnValue({ mutate: jest.fn(), isPending: false });
-    mockUseDeleteHarvest.mockReturnValue({ mutate: jest.fn(), isPending: false });
-    jest.spyOn(window, 'confirm').mockReturnValue(true); // Mock confirm dialog
-    jest.spyOn(window, 'alert').mockImplementation(() => {}); // Mock alert
+
+    mockUseHarvestsListPage.mockReturnValue({
+      harvests: mockHarvests,
+      isLoading: false,
+      isModalOpen: false,
+      editingHarvest: null,
+      handleOpenCreateModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleCloseModal: jest.fn(),
+      handleSubmit: jest.fn(),
+      handleDelete: jest.fn(),
+      handleNavigateToDashboard: jest.fn(),
+      handleNavigateToProducers: jest.fn(),
+      handleNavigateToFarms: jest.fn(),
+      handleNavigateToFarmCrops: jest.fn(),
+      createHarvest: { mutate: jest.fn(), isPending: false },
+      updateHarvest: { mutate: jest.fn(), isPending: false },
+      deleteHarvest: { mutate: jest.fn(), isPending: false },
+    });
+
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    jest.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -137,8 +168,7 @@ describe('Componente HarvestsListPage', () => {
     const newHarvestButton = screen.getByText('+ Nova Safra');
     fireEvent.click(newHarvestButton);
 
-    expect(screen.getByText('Nova Safra')).toBeInTheDocument();
-    expect(screen.getByTestId('harvest-form')).toBeInTheDocument();
+    expect(mockUseHarvestsListPage().handleOpenCreateModal).toHaveBeenCalled();
   });
 
   it('deve abrir modal de edição ao clicar em Editar', () => {
@@ -147,22 +177,20 @@ describe('Componente HarvestsListPage', () => {
     const editButtons = screen.getAllByText('Editar');
     fireEvent.click(editButtons[0]);
 
-    expect(screen.getByText('Editar Safra')).toBeInTheDocument();
+    expect(mockUseHarvestsListPage().handleOpenEditModal).toHaveBeenCalledWith(mockHarvests[0]);
   });
 
   it('deve fechar modal ao clicar em cancelar', () => {
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isModalOpen: true,
+    });
     renderWithTheme(<HarvestsListPage />);
-
-    const newHarvestButton = screen.getByText('+ Nova Safra');
-    fireEvent.click(newHarvestButton);
-
-    expect(screen.getByText('Nova Safra')).toBeInTheDocument();
 
     const cancelButton = screen.getByText('Cancelar');
     fireEvent.click(cancelButton);
 
-    // Verifica se o botão cancelar foi clicado (funcionalidade básica)
-    expect(cancelButton).toBeInTheDocument();
+    expect(mockUseHarvestsListPage().handleCloseModal).toHaveBeenCalled();
   });
 
   it('deve navegar para dashboard ao clicar em Ver Dashboard', () => {
@@ -171,7 +199,7 @@ describe('Componente HarvestsListPage', () => {
     const dashboardButton = screen.getByText('Ver Dashboard');
     fireEvent.click(dashboardButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    expect(mockUseHarvestsListPage().handleNavigateToDashboard).toHaveBeenCalled();
   });
 
   it('deve navegar para produtores ao clicar em Ver Produtores', () => {
@@ -180,7 +208,7 @@ describe('Componente HarvestsListPage', () => {
     const producersButton = screen.getByText('Ver Produtores');
     fireEvent.click(producersButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/producers');
+    expect(mockUseHarvestsListPage().handleNavigateToProducers).toHaveBeenCalled();
   });
 
   it('deve navegar para fazendas ao clicar em Ver Fazendas', () => {
@@ -189,7 +217,7 @@ describe('Componente HarvestsListPage', () => {
     const farmsButton = screen.getByText('Ver Fazendas');
     fireEvent.click(farmsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/farms');
+    expect(mockUseHarvestsListPage().handleNavigateToFarms).toHaveBeenCalled();
   });
 
   it('deve navegar para associações ao clicar em Ver Associações', () => {
@@ -198,7 +226,7 @@ describe('Componente HarvestsListPage', () => {
     const associationsButton = screen.getByText('Ver Associações');
     fireEvent.click(associationsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/farm-crops');
+    expect(mockUseHarvestsListPage().handleNavigateToFarmCrops).toHaveBeenCalled();
   });
 
   it('deve mostrar confirmação ao clicar em Excluir', () => {
@@ -207,7 +235,7 @@ describe('Componente HarvestsListPage', () => {
     const deleteButtons = screen.getAllByText('Excluir');
     fireEvent.click(deleteButtons[0]);
 
-    expect(window.confirm).toHaveBeenCalledWith('Tem certeza que deseja excluir a safra "Safra 2021"?');
+    expect(mockUseHarvestsListPage().handleDelete).toHaveBeenCalledWith('1');
   });
 
   it('deve renderizar com estrutura HTML correta', () => {
@@ -327,7 +355,10 @@ describe('Componente HarvestsListPage', () => {
   });
 
   it('deve renderizar com estado de loading da tabela', () => {
-    mockUseHarvests.mockReturnValue({ data: mockHarvests, isLoading: true });
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isLoading: true,
+    });
     renderWithTheme(<HarvestsListPage />);
 
     // Quando está loading, deve mostrar "Carregando..." em vez da tabela
@@ -372,8 +403,10 @@ describe('Componente HarvestsListPage', () => {
   });
 
   it('deve renderizar com botões desabilitados durante exclusão', () => {
-    // O componente não desabilita botões durante exclusão, apenas durante criação/edição
-    // Este teste verifica se os botões estão presentes
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      deleteHarvest: { mutate: jest.fn(), isPending: true },
+    });
     renderWithTheme(<HarvestsListPage />);
 
     const deleteButtons = screen.getAllByText('Excluir');
@@ -382,59 +415,70 @@ describe('Componente HarvestsListPage', () => {
   });
 
   it('deve renderizar com formulário preenchido ao editar', () => {
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isModalOpen: true,
+      editingHarvest: mockHarvests[0],
+    });
     renderWithTheme(<HarvestsListPage />);
-
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
 
     expect(screen.getByText('Editar Safra')).toBeInTheDocument();
     expect(screen.getByTestId('harvest-form')).toBeInTheDocument();
   });
 
   it('deve renderizar com mensagem de lista vazia quando não há safras', () => {
-    mockUseHarvests.mockReturnValue({ data: [], isLoading: false });
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      harvests: [],
+    });
     renderWithTheme(<HarvestsListPage />);
 
     expect(screen.getByText('Nenhuma safra cadastrada')).toBeInTheDocument();
   });
 
   it('deve renderizar com formulário de criação com campos vazios', () => {
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isModalOpen: true,
+      editingHarvest: null,
+    });
     renderWithTheme(<HarvestsListPage />);
-
-    const newHarvestButton = screen.getByText('+ Nova Safra');
-    fireEvent.click(newHarvestButton);
 
     expect(screen.getByTestId('harvest-name-input')).toHaveValue('');
     expect(screen.getByTestId('harvest-year-input')).toHaveValue('');
   });
 
   it('deve renderizar com formulário de edição preenchido', () => {
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isModalOpen: true,
+      editingHarvest: mockHarvests[0],
+    });
     renderWithTheme(<HarvestsListPage />);
-
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
 
     expect(screen.getByTestId('harvest-name-input')).toHaveValue('Safra 2021');
     expect(screen.getByTestId('harvest-year-input')).toHaveValue('2021');
   });
 
   it('deve renderizar com botão salvar desabilitado durante carregamento', () => {
-    mockUseCreateHarvest.mockReturnValue({ mutate: jest.fn(), isPending: true });
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isModalOpen: true,
+      createHarvest: { mutate: jest.fn(), isPending: true },
+    });
     renderWithTheme(<HarvestsListPage />);
-
-    const newHarvestButton = screen.getByText('+ Nova Safra');
-    fireEvent.click(newHarvestButton);
 
     const saveButton = screen.getByText('Salvar');
     expect(saveButton).toBeDisabled();
   });
 
   it('deve renderizar com botão salvar desabilitado durante atualização', () => {
-    mockUseUpdateHarvest.mockReturnValue({ mutate: jest.fn(), isPending: true });
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isModalOpen: true,
+      updateHarvest: { mutate: jest.fn(), isPending: true },
+    });
     renderWithTheme(<HarvestsListPage />);
-
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
 
     const saveButton = screen.getByText('Salvar');
     expect(saveButton).toBeDisabled();
@@ -525,10 +569,12 @@ describe('Componente HarvestsListPage', () => {
   });
 
   it('deve renderizar com modal de edição', () => {
+    mockUseHarvestsListPage.mockReturnValue({
+      ...mockUseHarvestsListPage(),
+      isModalOpen: true,
+      editingHarvest: mockHarvests[0],
+    });
     renderWithTheme(<HarvestsListPage />);
-
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
 
     expect(screen.getByText('Editar Safra')).toBeInTheDocument();
     expect(screen.getByTestId('harvest-form')).toBeInTheDocument();
@@ -540,7 +586,7 @@ describe('Componente HarvestsListPage', () => {
     const deleteButtons = screen.getAllByText('Excluir');
     fireEvent.click(deleteButtons[0]);
 
-    expect(window.confirm).toHaveBeenCalledWith('Tem certeza que deseja excluir a safra "Safra 2021"?');
+    expect(mockUseHarvestsListPage().handleDelete).toHaveBeenCalledWith('1');
   });
 
   it('deve renderizar com dados de diferentes anos', () => {
