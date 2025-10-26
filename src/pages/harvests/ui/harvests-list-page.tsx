@@ -1,11 +1,9 @@
 'use client';
 
 import styled from 'styled-components';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useHarvests, useDeleteHarvest, useCreateHarvest, useUpdateHarvest, Harvest } from '@/entities/harvest';
 import { Card, Button, Table, Modal } from '@/shared/ui';
-import { HarvestForm, HarvestFormValues } from '@/features/harvests';
+import { HarvestForm, useHarvestsListPage } from '@/features/harvests';
+import { HARVESTS_TABLE_COLUMNS } from '@/features/harvests/config/harvests-table-columns';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -43,82 +41,36 @@ const ActionsCell = styled.div`
 `;
 
 export function HarvestsListPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingHarvest, setEditingHarvest] = useState<Harvest | null>(null);
-  const router = useRouter();
-
-  const { data: harvests, isLoading } = useHarvests();
-  const createHarvest = useCreateHarvest({
-    onSuccess: () => {
-      setIsModalOpen(false);
-      setEditingHarvest(null);
-    },
-  });
-  const updateHarvest = useUpdateHarvest({
-    onSuccess: () => {
-      setIsModalOpen(false);
-      setEditingHarvest(null);
-    },
-  });
-  const deleteHarvest = useDeleteHarvest();
-
-  const handleOpenCreateModal = () => {
-    setEditingHarvest(null);
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEditModal = (harvest: Harvest) => {
-    setEditingHarvest(harvest);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingHarvest(null);
-  };
-
-  const handleSubmit = (data: HarvestFormValues) => {
-    if (editingHarvest) {
-      updateHarvest.mutate({ id: editingHarvest.id, data });
-    } else {
-      createHarvest.mutate(data);
-    }
-  };
-
-  const handleDelete = (harvest: Harvest) => {
-    if (confirm(`Tem certeza que deseja excluir a safra "${harvest.name}"?`)) {
-      deleteHarvest.mutate(harvest.id);
-    }
-  };
+  const {
+    harvests,
+    isLoading,
+    isModalOpen,
+    editingHarvest,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleCloseModal,
+    handleSubmit,
+    handleDelete,
+    handleNavigateToDashboard,
+    handleNavigateToProducers,
+    handleNavigateToFarms,
+    handleNavigateToFarmCrops,
+    createHarvest,
+    updateHarvest,
+  } = useHarvestsListPage();
 
   const columns = [
-    {
-      key: 'name',
-      header: 'Nome da Safra',
-      width: '40%',
-    },
-    {
-      key: 'year',
-      header: 'Ano',
-      width: '20%',
-      render: (harvest: Harvest) => harvest.year.toString(),
-    },
-    {
-      key: 'createdAt',
-      header: 'Criada em',
-      width: '20%',
-      render: (harvest: Harvest) => new Date(harvest.createdAt).toLocaleDateString('pt-BR'),
-    },
+    ...HARVESTS_TABLE_COLUMNS.slice(0, -1),
     {
       key: 'actions',
       header: 'Ações',
       width: '20%',
-      render: (harvest: Harvest) => (
+      render: (harvest: any) => (
         <ActionsCell>
           <Button variant='outline' size='sm' onClick={() => handleOpenEditModal(harvest)}>
             Editar
           </Button>
-          <Button variant='danger' size='sm' onClick={() => handleDelete(harvest)}>
+          <Button variant='danger' size='sm' onClick={() => handleDelete(harvest.id)}>
             Excluir
           </Button>
         </ActionsCell>
@@ -134,16 +86,16 @@ export function HarvestsListPage() {
 
         <Actions>
           <Button onClick={handleOpenCreateModal}>+ Nova Safra</Button>
-          <Button variant='outline' onClick={() => router.push('/dashboard')}>
+          <Button variant='outline' onClick={handleNavigateToDashboard}>
             Ver Dashboard
           </Button>
-          <Button variant='outline' onClick={() => router.push('/producers')}>
+          <Button variant='outline' onClick={handleNavigateToProducers}>
             Ver Produtores
           </Button>
-          <Button variant='outline' onClick={() => router.push('/farms')}>
+          <Button variant='outline' onClick={handleNavigateToFarms}>
             Ver Fazendas
           </Button>
-          <Button variant='outline' onClick={() => router.push('/farm-crops')}>
+          <Button variant='outline' onClick={handleNavigateToFarmCrops}>
             Ver Associações
           </Button>
         </Actions>
