@@ -1,11 +1,9 @@
 'use client';
 
 import styled from 'styled-components';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCrops, useDeleteCrop, useCreateCrop, useUpdateCrop, Crop } from '@/entities/crop';
 import { Card, Button, Table, Modal } from '@/shared/ui';
-import { CropForm, CropFormValues } from '@/features/crops';
+import { CropForm, useCropsListPage } from '@/features/crops';
+import { CROPS_TABLE_COLUMNS } from '@/features/crops/config/crops-table-columns';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -43,70 +41,36 @@ const ActionsCell = styled.div`
 `;
 
 export function CropsListPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCrop, setEditingCrop] = useState<Crop | null>(null);
-  const router = useRouter();
-
-  const { data: crops, isLoading } = useCrops();
-  const createCrop = useCreateCrop({
-    onSuccess: () => {
-      setIsModalOpen(false);
-      setEditingCrop(null);
-    },
-  });
-  const updateCrop = useUpdateCrop({
-    onSuccess: () => {
-      setIsModalOpen(false);
-      setEditingCrop(null);
-    },
-  });
-  const deleteCrop = useDeleteCrop();
-
-  const handleOpenCreateModal = () => {
-    setEditingCrop(null);
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEditModal = (crop: Crop) => {
-    setEditingCrop(crop);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingCrop(null);
-  };
-
-  const handleSubmit = (data: CropFormValues) => {
-    if (editingCrop) {
-      updateCrop.mutate({ id: editingCrop.id, data });
-    } else {
-      createCrop.mutate(data);
-    }
-  };
-
-  const handleDelete = (crop: Crop) => {
-    if (confirm(`Tem certeza que deseja excluir a cultura "${crop.name}"?`)) {
-      deleteCrop.mutate(crop.id);
-    }
-  };
+  const {
+    crops,
+    isLoading,
+    isModalOpen,
+    editingCrop,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleCloseModal,
+    handleSubmit,
+    handleDelete,
+    handleNavigateToDashboard,
+    handleNavigateToProducers,
+    handleNavigateToHarvests,
+    handleNavigateToFarmCrops,
+    createCrop,
+    updateCrop,
+  } = useCropsListPage();
 
   const columns = [
-    {
-      key: 'name',
-      header: 'Nome da Cultura',
-      width: '80%',
-    },
+    ...CROPS_TABLE_COLUMNS.slice(0, -1),
     {
       key: 'actions',
       header: 'Ações',
       width: '20%',
-      render: (crop: Crop) => (
+      render: (crop: any) => (
         <ActionsCell>
           <Button variant='outline' size='sm' onClick={() => handleOpenEditModal(crop)}>
             Editar
           </Button>
-          <Button variant='danger' size='sm' onClick={() => handleDelete(crop)}>
+          <Button variant='danger' size='sm' onClick={() => handleDelete(crop.id)}>
             Excluir
           </Button>
         </ActionsCell>
@@ -122,16 +86,16 @@ export function CropsListPage() {
 
         <Actions>
           <Button onClick={handleOpenCreateModal}>+ Nova Cultura</Button>
-          <Button variant='outline' onClick={() => router.push('/dashboard')}>
+          <Button variant='outline' onClick={handleNavigateToDashboard}>
             Ver Dashboard
           </Button>
-          <Button variant='outline' onClick={() => router.push('/producers')}>
+          <Button variant='outline' onClick={handleNavigateToProducers}>
             Ver Produtores
           </Button>
-          <Button variant='outline' onClick={() => router.push('/harvests')}>
+          <Button variant='outline' onClick={handleNavigateToHarvests}>
             Ver Safras
           </Button>
-          <Button variant='outline' onClick={() => router.push('/farm-crops')}>
+          <Button variant='outline' onClick={handleNavigateToFarmCrops}>
             Ver Associações
           </Button>
         </Actions>
