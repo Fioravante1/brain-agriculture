@@ -159,7 +159,7 @@ describe('Componente CropsListPage', () => {
     const deleteButtons = screen.getAllByText('Excluir');
     fireEvent.click(deleteButtons[0]);
 
-    expect(mockConfirm).toHaveBeenCalledWith('Tem certeza que deseja excluir a cultura "Soja"?');
+    expect(mockConfirm).toHaveBeenCalledWith('Tem certeza que deseja excluir esta cultura?');
   });
 
   it('deve renderizar com estrutura HTML correta', () => {
