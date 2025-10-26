@@ -1,12 +1,9 @@
 'use client';
 
 import styled from 'styled-components';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useFarms, useDeleteFarm, useCreateFarm, useUpdateFarm, Farm } from '@/entities/farm';
 import { Card, Button, Table, Modal } from '@/shared/ui';
-import { formatNumber } from '@/shared/lib/utils';
-import { FarmForm, FarmFormValues } from '@/features/farms';
+import { FarmForm, useFarmsListPage } from '@/features/farms';
+import { FARMS_TABLE_COLUMNS } from '@/features/farms/config/farms-table-columns';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -44,95 +41,32 @@ const ActionsCell = styled.div`
 `;
 
 export function FarmsListPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingFarm, setEditingFarm] = useState<Farm | null>(null);
-  const router = useRouter();
-
-  const { data: farms, isLoading } = useFarms();
-  const createFarm = useCreateFarm({
-    onSuccess: () => {
-      setIsModalOpen(false);
-      setEditingFarm(null);
-    },
-  });
-  const updateFarm = useUpdateFarm({
-    onSuccess: () => {
-      setIsModalOpen(false);
-      setEditingFarm(null);
-    },
-  });
-  const deleteFarm = useDeleteFarm();
-
-  const handleOpenCreateModal = () => {
-    setEditingFarm(null);
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEditModal = (farm: Farm) => {
-    setEditingFarm(farm);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingFarm(null);
-  };
-
-  const handleSubmit = (data: FarmFormValues) => {
-    if (editingFarm) {
-      updateFarm.mutate({ id: editingFarm.id, data });
-    } else {
-      createFarm.mutate(data);
-    }
-  };
-
-  const handleDelete = (farm: Farm) => {
-    if (confirm(`Tem certeza que deseja excluir a fazenda "${farm.name}"?`)) {
-      deleteFarm.mutate(farm.id);
-    }
-  };
+  const {
+    farms,
+    isLoading,
+    isModalOpen,
+    editingFarm,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleCloseModal,
+    handleSubmit,
+    handleDelete,
+    handleNavigateToDashboard,
+    handleNavigateToProducers,
+    handleNavigateToCrops,
+    handleNavigateToHarvests,
+    handleNavigateToFarmCrops,
+    createFarm,
+    updateFarm,
+  } = useFarmsListPage();
 
   const columns = [
-    {
-      key: 'name',
-      header: 'Nome da Fazenda',
-      width: '25%',
-    },
-    {
-      key: 'producer',
-      header: 'Produtor',
-      width: '20%',
-      render: (farm: Farm) => farm.producer.name,
-    },
-    {
-      key: 'location',
-      header: 'Localização',
-      width: '15%',
-      render: (farm: Farm) => `${farm.city}/${farm.state}`,
-    },
-    {
-      key: 'totalArea',
-      header: 'Área Total',
-      width: '12%',
-      render: (farm: Farm) => `${formatNumber(farm.totalArea)} ha`,
-    },
-    {
-      key: 'arableArea',
-      header: 'Área Agricultável',
-      width: '12%',
-      render: (farm: Farm) => `${formatNumber(farm.arableArea)} ha`,
-    },
-    {
-      key: 'vegetationArea',
-      header: 'Área Vegetação',
-      width: '12%',
-      render: (farm: Farm) => `${formatNumber(farm.vegetationArea)} ha`,
-    },
+    ...FARMS_TABLE_COLUMNS.slice(0, -1),
     {
       key: 'actions',
       header: 'Ações',
       width: '4%',
-      render: (farm: Farm) => (
+      render: (farm: any) => (
         <ActionsCell>
           <Button variant='outline' size='sm' onClick={() => handleOpenEditModal(farm)}>
             Editar
@@ -153,19 +87,19 @@ export function FarmsListPage() {
 
         <Actions>
           <Button onClick={handleOpenCreateModal}>+ Nova Fazenda</Button>
-          <Button variant='outline' onClick={() => router.push('/dashboard')}>
+          <Button variant='outline' onClick={handleNavigateToDashboard}>
             Ver Dashboard
           </Button>
-          <Button variant='outline' onClick={() => router.push('/producers')}>
+          <Button variant='outline' onClick={handleNavigateToProducers}>
             Ver Produtores
           </Button>
-          <Button variant='outline' onClick={() => router.push('/crops')}>
+          <Button variant='outline' onClick={handleNavigateToCrops}>
             Ver Culturas
           </Button>
-          <Button variant='outline' onClick={() => router.push('/harvests')}>
+          <Button variant='outline' onClick={handleNavigateToHarvests}>
             Ver Safras
           </Button>
-          <Button variant='outline' onClick={() => router.push('/farm-crops')}>
+          <Button variant='outline' onClick={handleNavigateToFarmCrops}>
             Ver Associações
           </Button>
         </Actions>
