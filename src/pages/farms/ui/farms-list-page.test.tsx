@@ -2,7 +2,6 @@ import { fireEvent, renderWithTheme, screen } from '@/shared/lib/test-utils';
 import { FarmsListPage } from './farms-list-page';
 import { Farm } from '@/entities/farm';
 
-// Mock do useRouter
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -10,7 +9,6 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
-// Mock dos hooks de entidades
 const mockFarms: Farm[] = [
   {
     id: '1',
@@ -62,19 +60,8 @@ const mockFarms: Farm[] = [
   },
 ];
 
-const mockUseFarms = jest.fn();
-const mockUseCreateFarm = jest.fn();
-const mockUseUpdateFarm = jest.fn();
-const mockUseDeleteFarm = jest.fn();
+const mockUseFarmsListPage = jest.fn();
 
-jest.mock('@/entities/farm', () => ({
-  useFarms: () => mockUseFarms(),
-  useCreateFarm: () => mockUseCreateFarm(),
-  useUpdateFarm: () => mockUseUpdateFarm(),
-  useDeleteFarm: () => mockUseDeleteFarm(),
-}));
-
-// Mock do componente FarmForm
 jest.mock('@/features/farms', () => ({
   FarmForm: jest.fn(({ onSubmit, onCancel, defaultValues, isLoading }) => (
     <form onSubmit={onSubmit} data-testid='farm-form'>
@@ -92,6 +79,20 @@ jest.mock('@/features/farms', () => ({
       </button>
     </form>
   )),
+  useFarmsListPage: () => mockUseFarmsListPage(),
+}));
+
+// Mock da configuração das colunas
+jest.mock('@/features/farms/config/farms-table-columns', () => ({
+  FARMS_TABLE_COLUMNS: [
+    { key: 'name', header: 'Nome da Fazenda', width: '25%' },
+    { key: 'producer', header: 'Produtor', width: '20%', render: (farm: any) => farm.producer.name },
+    { key: 'location', header: 'Localização', width: '15%', render: (farm: any) => `${farm.city}/${farm.state}` },
+    { key: 'totalArea', header: 'Área Total', width: '12%', render: (farm: any) => `${farm.totalArea} ha` },
+    { key: 'arableArea', header: 'Área Agricultável', width: '12%', render: (farm: any) => `${farm.arableArea} ha` },
+    { key: 'vegetationArea', header: 'Área Vegetação', width: '12%', render: (farm: any) => `${farm.vegetationArea} ha` },
+    { key: 'actions', header: 'Ações', width: '4%', render: (farm: any) => farm.name },
+  ],
 }));
 
 // Mock da função formatNumber
@@ -102,10 +103,25 @@ jest.mock('@/shared/lib/utils', () => ({
 describe('Componente FarmsListPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseFarms.mockReturnValue({ data: mockFarms, isLoading: false });
-    mockUseCreateFarm.mockReturnValue({ mutate: jest.fn(), isPending: false });
-    mockUseUpdateFarm.mockReturnValue({ mutate: jest.fn(), isPending: false });
-    mockUseDeleteFarm.mockReturnValue({ mutate: jest.fn(), isPending: false });
+    mockUseFarmsListPage.mockReturnValue({
+      farms: mockFarms,
+      isLoading: false,
+      isModalOpen: false,
+      editingFarm: null,
+      handleOpenCreateModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleCloseModal: jest.fn(),
+      handleSubmit: jest.fn(),
+      handleDelete: jest.fn(),
+      handleNavigateToDashboard: jest.fn(),
+      handleNavigateToProducers: jest.fn(),
+      handleNavigateToCrops: jest.fn(),
+      handleNavigateToHarvests: jest.fn(),
+      handleNavigateToFarmCrops: jest.fn(),
+      createFarm: { mutate: jest.fn(), isPending: false },
+      updateFarm: { mutate: jest.fn(), isPending: false },
+      deleteFarm: { mutate: jest.fn(), isPending: false },
+    });
     jest.spyOn(window, 'confirm').mockReturnValue(true); // Mock confirm dialog
     jest.spyOn(window, 'alert').mockImplementation(() => {}); // Mock alert
   });
@@ -187,8 +203,7 @@ describe('Componente FarmsListPage', () => {
     const newFarmButton = screen.getByText('+ Nova Fazenda');
     fireEvent.click(newFarmButton);
 
-    expect(screen.getByText('Nova Fazenda')).toBeInTheDocument();
-    expect(screen.getByTestId('farm-form')).toBeInTheDocument();
+    expect(mockUseFarmsListPage().handleOpenCreateModal).toHaveBeenCalled();
   });
 
   it('deve abrir modal de edição ao clicar em Editar', () => {
@@ -197,22 +212,20 @@ describe('Componente FarmsListPage', () => {
     const editButtons = screen.getAllByText('Editar');
     fireEvent.click(editButtons[0]);
 
-    expect(screen.getByText('Editar Fazenda')).toBeInTheDocument();
+    expect(mockUseFarmsListPage().handleOpenEditModal).toHaveBeenCalledWith(mockFarms[0]);
   });
 
   it('deve fechar modal ao clicar em cancelar', () => {
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      isModalOpen: true,
+    });
     renderWithTheme(<FarmsListPage />);
-
-    const newFarmButton = screen.getByText('+ Nova Fazenda');
-    fireEvent.click(newFarmButton);
-
-    expect(screen.getByText('Nova Fazenda')).toBeInTheDocument();
 
     const cancelButton = screen.getByText('Cancelar');
     fireEvent.click(cancelButton);
 
-    // Verifica se o botão cancelar foi clicado (funcionalidade básica)
-    expect(cancelButton).toBeInTheDocument();
+    expect(mockUseFarmsListPage().handleCloseModal).toHaveBeenCalled();
   });
 
   it('deve navegar para dashboard ao clicar em Ver Dashboard', () => {
@@ -221,7 +234,7 @@ describe('Componente FarmsListPage', () => {
     const dashboardButton = screen.getByText('Ver Dashboard');
     fireEvent.click(dashboardButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    expect(mockUseFarmsListPage().handleNavigateToDashboard).toHaveBeenCalled();
   });
 
   it('deve navegar para produtores ao clicar em Ver Produtores', () => {
@@ -230,7 +243,7 @@ describe('Componente FarmsListPage', () => {
     const producersButton = screen.getByText('Ver Produtores');
     fireEvent.click(producersButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/producers');
+    expect(mockUseFarmsListPage().handleNavigateToProducers).toHaveBeenCalled();
   });
 
   it('deve navegar para culturas ao clicar em Ver Culturas', () => {
@@ -239,7 +252,7 @@ describe('Componente FarmsListPage', () => {
     const cropsButton = screen.getByText('Ver Culturas');
     fireEvent.click(cropsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/crops');
+    expect(mockUseFarmsListPage().handleNavigateToCrops).toHaveBeenCalled();
   });
 
   it('deve navegar para safras ao clicar em Ver Safras', () => {
@@ -248,7 +261,7 @@ describe('Componente FarmsListPage', () => {
     const harvestsButton = screen.getByText('Ver Safras');
     fireEvent.click(harvestsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/harvests');
+    expect(mockUseFarmsListPage().handleNavigateToHarvests).toHaveBeenCalled();
   });
 
   it('deve navegar para associações ao clicar em Ver Associações', () => {
@@ -257,7 +270,7 @@ describe('Componente FarmsListPage', () => {
     const associationsButton = screen.getByText('Ver Associações');
     fireEvent.click(associationsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/farm-crops');
+    expect(mockUseFarmsListPage().handleNavigateToFarmCrops).toHaveBeenCalled();
   });
 
   it('deve mostrar confirmação ao clicar em Excluir', () => {
@@ -266,7 +279,7 @@ describe('Componente FarmsListPage', () => {
     const deleteButtons = screen.getAllByText('Excluir');
     fireEvent.click(deleteButtons[0]);
 
-    expect(window.confirm).toHaveBeenCalledWith('Tem certeza que deseja excluir a fazenda "Fazenda São João"?');
+    expect(mockUseFarmsListPage().handleDelete).toHaveBeenCalledWith(mockFarms[0]);
   });
 
   it('deve renderizar com estrutura HTML correta', () => {
@@ -390,10 +403,12 @@ describe('Componente FarmsListPage', () => {
   });
 
   it('deve renderizar com estado de loading da tabela', () => {
-    mockUseFarms.mockReturnValue({ data: mockFarms, isLoading: true });
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      isLoading: true,
+    });
     renderWithTheme(<FarmsListPage />);
 
-    // Quando está loading, deve mostrar "Carregando..." em vez da tabela
     expect(screen.getByText('Carregando...')).toBeInTheDocument();
   });
 
@@ -435,8 +450,10 @@ describe('Componente FarmsListPage', () => {
   });
 
   it('deve renderizar com botões desabilitados durante exclusão', () => {
-    // O componente não desabilita botões durante exclusão, apenas durante criação/edição
-    // Este teste verifica se os botões estão presentes
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      deleteFarm: { mutate: jest.fn(), isPending: true },
+    });
     renderWithTheme(<FarmsListPage />);
 
     const deleteButtons = screen.getAllByText('Excluir');
@@ -445,27 +462,34 @@ describe('Componente FarmsListPage', () => {
   });
 
   it('deve renderizar com formulário preenchido ao editar', () => {
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      isModalOpen: true,
+      editingFarm: mockFarms[0],
+    });
     renderWithTheme(<FarmsListPage />);
-
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
 
     expect(screen.getByText('Editar Fazenda')).toBeInTheDocument();
     expect(screen.getByTestId('farm-form')).toBeInTheDocument();
   });
 
   it('deve renderizar com mensagem de lista vazia quando não há fazendas', () => {
-    mockUseFarms.mockReturnValue({ data: [], isLoading: false });
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      farms: [],
+    });
     renderWithTheme(<FarmsListPage />);
 
     expect(screen.getByText('Nenhuma fazenda cadastrada')).toBeInTheDocument();
   });
 
   it('deve renderizar com formulário de criação com campos vazios', () => {
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      isModalOpen: true,
+      editingFarm: null,
+    });
     renderWithTheme(<FarmsListPage />);
-
-    const newFarmButton = screen.getByText('+ Nova Fazenda');
-    fireEvent.click(newFarmButton);
 
     expect(screen.getByTestId('farm-name-input')).toHaveValue('');
     expect(screen.getByTestId('farm-city-input')).toHaveValue('');
@@ -476,10 +500,12 @@ describe('Componente FarmsListPage', () => {
   });
 
   it('deve renderizar com formulário de edição preenchido', () => {
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      isModalOpen: true,
+      editingFarm: mockFarms[0],
+    });
     renderWithTheme(<FarmsListPage />);
-
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
 
     expect(screen.getByTestId('farm-name-input')).toHaveValue('Fazenda São João');
     expect(screen.getByTestId('farm-city-input')).toHaveValue('São Paulo');
@@ -490,22 +516,24 @@ describe('Componente FarmsListPage', () => {
   });
 
   it('deve renderizar com botão salvar desabilitado durante carregamento', () => {
-    mockUseCreateFarm.mockReturnValue({ mutate: jest.fn(), isPending: true });
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      isModalOpen: true,
+      createFarm: { mutate: jest.fn(), isPending: true },
+    });
     renderWithTheme(<FarmsListPage />);
-
-    const newFarmButton = screen.getByText('+ Nova Fazenda');
-    fireEvent.click(newFarmButton);
 
     const saveButton = screen.getByText('Salvar');
     expect(saveButton).toBeDisabled();
   });
 
   it('deve renderizar com botão salvar desabilitado durante atualização', () => {
-    mockUseUpdateFarm.mockReturnValue({ mutate: jest.fn(), isPending: true });
+    mockUseFarmsListPage.mockReturnValue({
+      ...mockUseFarmsListPage(),
+      isModalOpen: true,
+      updateFarm: { mutate: jest.fn(), isPending: true },
+    });
     renderWithTheme(<FarmsListPage />);
-
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
 
     const saveButton = screen.getByText('Salvar');
     expect(saveButton).toBeDisabled();
