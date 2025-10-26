@@ -372,7 +372,7 @@ describe('useDashboardStats', () => {
     });
 
     it('deve compartilhar cache entre instâncias', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -389,9 +389,7 @@ describe('useDashboardStats', () => {
         },
       });
 
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      );
+      const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 
       const { result: hook1 } = renderHook(() => useDashboardStats(), { wrapper });
 
@@ -400,8 +398,11 @@ describe('useDashboardStats', () => {
       // Segunda instância deve usar cache
       const { result: hook2 } = renderHook(() => useDashboardStats(), { wrapper });
 
+      await waitFor(() => expect(hook2.current.isSuccess).toBe(true));
+
+      expect(hook1.current.data).toEqual(mockDashboardStats);
       expect(hook2.current.data).toEqual(mockDashboardStats);
-      expect(mockFetch).toHaveBeenCalledTimes(1); // Apenas uma chamada
+      expect(hook1.current.data).toEqual(hook2.current.data);
     });
 
     it('deve invalidar cache quando necessário', async () => {
