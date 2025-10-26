@@ -1,12 +1,9 @@
 'use client';
 
 import styled from 'styled-components';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useProducers, useDeleteProducer, useCreateProducer, useUpdateProducer, Producer } from '@/entities/producer';
 import { Card, Button, Table, Modal } from '@/shared/ui';
-import { formatCPFOrCNPJ } from '@/shared/lib/utils';
-import { ProducerForm, ProducerFormValues } from '@/features/producers';
+import { ProducerForm, useProducersListPage } from '@/features/producers';
+import { PRODUCERS_TABLE_COLUMNS } from '@/features/producers/config';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -44,103 +41,33 @@ const ActionsCell = styled.div`
 `;
 
 export function ProducersListPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProducer, setEditingProducer] = useState<Producer | null>(null);
-  const router = useRouter();
-
-  const { data: producers, isLoading } = useProducers();
-
-  const createProducer = useCreateProducer({
-    onSuccess: () => {
-      alert('Produtor criado com sucesso!');
-      setIsModalOpen(false);
-    },
-    onError: error => {
-      alert(`Erro ao criar produtor: ${error.message}`);
-    },
-  });
-
-  const updateProducer = useUpdateProducer({
-    onSuccess: () => {
-      alert('Produtor atualizado com sucesso!');
-      setIsModalOpen(false);
-      setEditingProducer(null);
-    },
-    onError: error => {
-      alert(`Erro ao atualizar produtor: ${error.message}`);
-    },
-  });
-
-  const deleteProducer = useDeleteProducer({
-    onSuccess: () => {
-      alert('Produtor excluído com sucesso!');
-    },
-    onError: error => {
-      alert(`Erro ao excluir produtor: ${error.message}`);
-    },
-  });
-
-  const handleOpenCreateModal = () => {
-    setEditingProducer(null);
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEditModal = (producer: Producer) => {
-    setEditingProducer(producer);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingProducer(null);
-  };
-
-  const handleSubmit = (data: ProducerFormValues) => {
-    if (editingProducer) {
-      updateProducer.mutate({ id: editingProducer.id, data });
-    } else {
-      createProducer.mutate(data);
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este produtor?')) {
-      deleteProducer.mutate(id);
-    }
-  };
+  const {
+    producers,
+    isLoading,
+    isModalOpen,
+    editingProducer,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleCloseModal,
+    handleSubmit,
+    handleDelete,
+    handleNavigateToDashboard,
+    handleNavigateToFarms,
+    handleNavigateToCrops,
+    handleNavigateToHarvests,
+    handleNavigateToFarmCrops,
+    createProducer,
+    updateProducer,
+    deleteProducer,
+  } = useProducersListPage();
 
   const columns = [
-    {
-      key: 'name',
-      header: 'Nome',
-      width: '30%',
-    },
-    {
-      key: 'cpfCnpj',
-      header: 'CPF/CNPJ',
-      width: '20%',
-      render: (producer: Producer) => formatCPFOrCNPJ(producer.cpfCnpj),
-    },
-    {
-      key: 'farms',
-      header: 'Nº de Fazendas',
-      width: '20%',
-      render: (producer: Producer) => producer.farms.length,
-    },
-    {
-      key: 'totalArea',
-      header: 'Área Total (ha)',
-      width: '15%',
-      render: (producer: Producer) => {
-        const total = producer.farms.reduce((sum, farm) => sum + farm.totalArea, 0);
-        return total.toLocaleString('pt-BR');
-      },
-    },
+    ...PRODUCERS_TABLE_COLUMNS,
     {
       key: 'actions',
       header: 'Ações',
       width: '15%',
-      render: (producer: Producer) => (
+      render: (producer: any) => (
         <ActionsCell>
           <Button size='sm' variant='outline' onClick={() => handleOpenEditModal(producer)}>
             Editar
@@ -161,19 +88,19 @@ export function ProducersListPage() {
 
         <Actions>
           <Button onClick={handleOpenCreateModal}>+ Novo Produtor</Button>
-          <Button variant='outline' onClick={() => router.push('/dashboard')}>
+          <Button variant='outline' onClick={handleNavigateToDashboard}>
             Ver Dashboard
           </Button>
-          <Button variant='outline' onClick={() => router.push('/farms')}>
+          <Button variant='outline' onClick={handleNavigateToFarms}>
             Ver Fazendas
           </Button>
-          <Button variant='outline' onClick={() => router.push('/crops')}>
+          <Button variant='outline' onClick={handleNavigateToCrops}>
             Ver Culturas
           </Button>
-          <Button variant='outline' onClick={() => router.push('/harvests')}>
+          <Button variant='outline' onClick={handleNavigateToHarvests}>
             Ver Safras
           </Button>
-          <Button variant='outline' onClick={() => router.push('/farm-crops')}>
+          <Button variant='outline' onClick={handleNavigateToFarmCrops}>
             Ver Associações
           </Button>
         </Actions>
