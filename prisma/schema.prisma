@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Producer {
+  id      String @id @default(cuid())
+  cpfCnpj String @unique
+  name    String
+  farms   Farm[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("producers")
+}
+
+model Farm {
+  id            String @id @default(cuid())
+  producerId    String
+  name          String
+  city          String
+  state         String
+  totalArea     Float
+  arableArea    Float
+  vegetationArea Float
+  farmCrops     FarmCrop[]
+
+  producer Producer @relation(fields: [producerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("farms")
+}
+
+model Crop {
+  id        String @id @default(cuid())
+  name      String @unique
+  farmCrops FarmCrop[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("crops")
+}
+
+model Harvest {
+  id        String @id @default(cuid())
+  name      String @unique
+  year      Int
+  farmCrops FarmCrop[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("harvests")
+}
+
+model FarmCrop {
+  id        String @id @default(cuid())
+  farmId    String
+  harvestId String
+  cropId    String
+
+  farm    Farm    @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  crop    Crop    @relation(fields: [cropId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([farmId, harvestId, cropId])
+  @@map("farm_crops")
+}
