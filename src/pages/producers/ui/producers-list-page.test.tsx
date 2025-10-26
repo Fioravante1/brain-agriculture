@@ -2,7 +2,6 @@ import { fireEvent, renderWithTheme, screen } from '@/shared/lib/test-utils';
 import { ProducersListPage } from './producers-list-page';
 import { Producer } from '@/entities/producer';
 
-// Mock do useRouter
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -10,7 +9,6 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
-// Mock dos hooks de entidades
 const mockProducers: Producer[] = [
   {
     id: '1',
@@ -82,7 +80,8 @@ jest.mock('@/entities/producer', () => ({
   useDeleteProducer: () => mockUseDeleteProducer(),
 }));
 
-// Mock do componente ProducerForm
+const mockUseProducersListPage = jest.fn();
+
 jest.mock('@/features/producers', () => ({
   ProducerForm: jest.fn(({ onSubmit, onCancel, defaultValues, isLoading }) => (
     <form onSubmit={onSubmit} data-testid='producer-form'>
@@ -96,9 +95,40 @@ jest.mock('@/features/producers', () => ({
       </button>
     </form>
   )),
+  useProducersListPage: () => mockUseProducersListPage(),
 }));
 
-// Mock da função formatCPFOrCNPJ
+jest.mock('@/features/producers/config/producers-table-columns', () => ({
+  PRODUCERS_TABLE_COLUMNS: [
+    {
+      key: 'name',
+      header: 'Nome',
+      width: '30%',
+    },
+    {
+      key: 'cpfCnpj',
+      header: 'CPF/CNPJ',
+      width: '20%',
+      render: (producer: any) => producer.cpfCnpj,
+    },
+    {
+      key: 'farms',
+      header: 'Nº de Fazendas',
+      width: '20%',
+      render: (producer: any) => producer.farms.length,
+    },
+    {
+      key: 'totalArea',
+      header: 'Área Total (ha)',
+      width: '15%',
+      render: (producer: any) => {
+        const total = producer.farms.reduce((sum: number, farm: any) => sum + farm.totalArea, 0);
+        return total.toLocaleString('pt-BR');
+      },
+    },
+  ],
+}));
+
 jest.mock('@/shared/lib/utils', () => ({
   formatCPFOrCNPJ: jest.fn(value => {
     if (value.length === 11) {
@@ -115,8 +145,29 @@ describe('Componente ProducersListPage', () => {
     mockUseCreateProducer.mockReturnValue({ mutate: jest.fn(), isPending: false });
     mockUseUpdateProducer.mockReturnValue({ mutate: jest.fn(), isPending: false });
     mockUseDeleteProducer.mockReturnValue({ mutate: jest.fn(), isPending: false });
-    jest.spyOn(window, 'confirm').mockReturnValue(true); // Mock confirm dialog
-    jest.spyOn(window, 'alert').mockImplementation(() => {}); // Mock alert
+
+    mockUseProducersListPage.mockReturnValue({
+      producers: mockProducers,
+      isLoading: false,
+      isModalOpen: false,
+      editingProducer: null,
+      handleOpenCreateModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleCloseModal: jest.fn(),
+      handleSubmit: jest.fn(),
+      handleDelete: jest.fn(),
+      handleNavigateToDashboard: jest.fn(),
+      handleNavigateToFarms: jest.fn(),
+      handleNavigateToCrops: jest.fn(),
+      handleNavigateToHarvests: jest.fn(),
+      handleNavigateToFarmCrops: jest.fn(),
+      createProducer: { mutate: jest.fn(), isPending: false },
+      updateProducer: { mutate: jest.fn(), isPending: false },
+      deleteProducer: { mutate: jest.fn(), isPending: false },
+    });
+
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    jest.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -180,7 +231,7 @@ describe('Componente ProducersListPage', () => {
     const editButtons = screen.getAllByText('Editar');
     fireEvent.click(editButtons[0]);
 
-    expect(screen.getByText('Editar Produtor')).toBeInTheDocument();
+    expect(mockUseProducersListPage().handleOpenEditModal).toHaveBeenCalledWith(mockProducers[0]);
   });
 
   it('deve fechar modal ao clicar em cancelar', () => {
@@ -194,7 +245,6 @@ describe('Componente ProducersListPage', () => {
     const cancelButton = screen.getByText('Cancelar');
     fireEvent.click(cancelButton);
 
-    // Verifica se o botão cancelar foi clicado (funcionalidade básica)
     expect(cancelButton).toBeInTheDocument();
   });
 
@@ -204,7 +254,7 @@ describe('Componente ProducersListPage', () => {
     const dashboardButton = screen.getByText('Ver Dashboard');
     fireEvent.click(dashboardButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    expect(mockUseProducersListPage().handleNavigateToDashboard).toHaveBeenCalled();
   });
 
   it('deve navegar para fazendas ao clicar em Ver Fazendas', () => {
@@ -213,7 +263,7 @@ describe('Componente ProducersListPage', () => {
     const farmsButton = screen.getByText('Ver Fazendas');
     fireEvent.click(farmsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/farms');
+    expect(mockUseProducersListPage().handleNavigateToFarms).toHaveBeenCalled();
   });
 
   it('deve navegar para culturas ao clicar em Ver Culturas', () => {
@@ -222,7 +272,7 @@ describe('Componente ProducersListPage', () => {
     const cropsButton = screen.getByText('Ver Culturas');
     fireEvent.click(cropsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/crops');
+    expect(mockUseProducersListPage().handleNavigateToCrops).toHaveBeenCalled();
   });
 
   it('deve navegar para safras ao clicar em Ver Safras', () => {
@@ -231,7 +281,7 @@ describe('Componente ProducersListPage', () => {
     const harvestsButton = screen.getByText('Ver Safras');
     fireEvent.click(harvestsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/harvests');
+    expect(mockUseProducersListPage().handleNavigateToHarvests).toHaveBeenCalled();
   });
 
   it('deve navegar para associações ao clicar em Ver Associações', () => {
@@ -240,7 +290,7 @@ describe('Componente ProducersListPage', () => {
     const associationsButton = screen.getByText('Ver Associações');
     fireEvent.click(associationsButton);
 
-    expect(mockPush).toHaveBeenCalledWith('/farm-crops');
+    expect(mockUseProducersListPage().handleNavigateToFarmCrops).toHaveBeenCalled();
   });
 
   it('deve mostrar confirmação ao clicar em Excluir', () => {
@@ -249,7 +299,7 @@ describe('Componente ProducersListPage', () => {
     const deleteButtons = screen.getAllByText('Excluir');
     fireEvent.click(deleteButtons[0]);
 
-    expect(window.confirm).toHaveBeenCalledWith('Tem certeza que deseja excluir este produtor?');
+    expect(mockUseProducersListPage().handleDelete).toHaveBeenCalledWith('1');
   });
 
   it('deve renderizar com estrutura HTML correta', () => {
@@ -341,11 +391,9 @@ describe('Componente ProducersListPage', () => {
   it('deve renderizar com modal fechado inicialmente', () => {
     renderWithTheme(<ProducersListPage />);
 
-    // Verifica se os elementos principais da página estão presentes
     expect(screen.getByText('Produtores Rurais')).toBeInTheDocument();
     expect(screen.getByText('Gerencie os produtores cadastrados no sistema')).toBeInTheDocument();
 
-    // Verifica se os elementos principais estão presentes
     expect(screen.getByText('+ Novo Produtor')).toBeInTheDocument();
     expect(screen.getByText('Nome')).toBeInTheDocument();
   });
@@ -371,11 +419,29 @@ describe('Componente ProducersListPage', () => {
   });
 
   it('deve renderizar com estado de loading da tabela', () => {
-    mockUseProducers.mockReturnValue({ data: mockProducers, isLoading: true });
+    mockUseProducersListPage.mockReturnValue({
+      producers: [],
+      isLoading: true,
+      isModalOpen: false,
+      editingProducer: null,
+      handleOpenCreateModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleCloseModal: jest.fn(),
+      handleSubmit: jest.fn(),
+      handleDelete: jest.fn(),
+      handleNavigateToDashboard: jest.fn(),
+      handleNavigateToFarms: jest.fn(),
+      handleNavigateToCrops: jest.fn(),
+      handleNavigateToHarvests: jest.fn(),
+      handleNavigateToFarmCrops: jest.fn(),
+      createProducer: { mutate: jest.fn(), isPending: false },
+      updateProducer: { mutate: jest.fn(), isPending: false },
+      deleteProducer: { mutate: jest.fn(), isPending: false },
+    });
+
     renderWithTheme(<ProducersListPage />);
 
-    // Quando está loading, deve mostrar "Carregando..." em vez da tabela
-    expect(screen.getByText('Carregando...')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
   it('deve renderizar com estrutura completa da página', () => {
@@ -391,7 +457,6 @@ describe('Componente ProducersListPage', () => {
   it('deve renderizar com dados formatados corretamente', () => {
     renderWithTheme(<ProducersListPage />);
 
-    // Verifica se os dados estão sendo renderizados
     expect(screen.getByText('João Silva')).toBeInTheDocument();
     expect(screen.getByText('Maria Santos')).toBeInTheDocument();
     expect(screen.getByText('Pedro Costa')).toBeInTheDocument();
@@ -400,11 +465,8 @@ describe('Componente ProducersListPage', () => {
   it('deve renderizar com número correto de fazendas', () => {
     renderWithTheme(<ProducersListPage />);
 
-    // João Silva tem 2 fazendas
     expect(screen.getByText('2')).toBeInTheDocument();
-    // Maria Santos tem 1 fazenda
     expect(screen.getByText('1')).toBeInTheDocument();
-    // Pedro Costa tem 0 fazendas - verifica se existe pelo menos um "0"
     const zeroElements = screen.getAllByText('0');
     expect(zeroElements.length).toBeGreaterThanOrEqual(1);
   });
@@ -412,11 +474,8 @@ describe('Componente ProducersListPage', () => {
   it('deve renderizar com área total calculada corretamente', () => {
     renderWithTheme(<ProducersListPage />);
 
-    // João Silva: 100 + 200 = 300 hectares
     expect(screen.getByText('300')).toBeInTheDocument();
-    // Maria Santos: 150 hectares
     expect(screen.getByText('150')).toBeInTheDocument();
-    // Pedro Costa: 0 hectares - verifica se existe pelo menos um "0"
     const zeroElements = screen.getAllByText('0');
     expect(zeroElements.length).toBeGreaterThanOrEqual(1);
   });
@@ -424,13 +483,30 @@ describe('Componente ProducersListPage', () => {
   it('deve renderizar com CPF/CNPJ formatado', () => {
     renderWithTheme(<ProducersListPage />);
 
-    // Os valores formatados devem estar presentes
-    // Mock da função formatCPFOrCNPJ já está configurado
     expect(screen.getByText('João Silva')).toBeInTheDocument();
   });
 
   it('deve renderizar com botões desabilitados durante exclusão', () => {
-    mockUseDeleteProducer.mockReturnValue({ mutate: jest.fn(), isPending: true });
+    mockUseProducersListPage.mockReturnValue({
+      producers: mockProducers,
+      isLoading: false,
+      isModalOpen: false,
+      editingProducer: null,
+      handleOpenCreateModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleCloseModal: jest.fn(),
+      handleSubmit: jest.fn(),
+      handleDelete: jest.fn(),
+      handleNavigateToDashboard: jest.fn(),
+      handleNavigateToFarms: jest.fn(),
+      handleNavigateToCrops: jest.fn(),
+      handleNavigateToHarvests: jest.fn(),
+      handleNavigateToFarmCrops: jest.fn(),
+      createProducer: { mutate: jest.fn(), isPending: false },
+      updateProducer: { mutate: jest.fn(), isPending: false },
+      deleteProducer: { mutate: jest.fn(), isPending: true },
+    });
+
     renderWithTheme(<ProducersListPage />);
 
     const deleteButtons = screen.getAllByText('Excluir');
@@ -438,17 +514,53 @@ describe('Componente ProducersListPage', () => {
   });
 
   it('deve renderizar com formulário preenchido ao editar', () => {
-    renderWithTheme(<ProducersListPage />);
+    mockUseProducersListPage.mockReturnValue({
+      producers: mockProducers,
+      isLoading: false,
+      isModalOpen: true,
+      editingProducer: mockProducers[0],
+      handleOpenCreateModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleCloseModal: jest.fn(),
+      handleSubmit: jest.fn(),
+      handleDelete: jest.fn(),
+      handleNavigateToDashboard: jest.fn(),
+      handleNavigateToFarms: jest.fn(),
+      handleNavigateToCrops: jest.fn(),
+      handleNavigateToHarvests: jest.fn(),
+      handleNavigateToFarmCrops: jest.fn(),
+      createProducer: { mutate: jest.fn(), isPending: false },
+      updateProducer: { mutate: jest.fn(), isPending: false },
+      deleteProducer: { mutate: jest.fn(), isPending: false },
+    });
 
-    const editButtons = screen.getAllByText('Editar');
-    fireEvent.click(editButtons[0]);
+    renderWithTheme(<ProducersListPage />);
 
     expect(screen.getByText('Editar Produtor')).toBeInTheDocument();
     expect(screen.getByTestId('producer-form')).toBeInTheDocument();
   });
 
   it('deve renderizar com mensagem de lista vazia quando não há produtores', () => {
-    mockUseProducers.mockReturnValue({ data: [], isLoading: false });
+    mockUseProducersListPage.mockReturnValue({
+      producers: [],
+      isLoading: false,
+      isModalOpen: false,
+      editingProducer: null,
+      handleOpenCreateModal: jest.fn(),
+      handleOpenEditModal: jest.fn(),
+      handleCloseModal: jest.fn(),
+      handleSubmit: jest.fn(),
+      handleDelete: jest.fn(),
+      handleNavigateToDashboard: jest.fn(),
+      handleNavigateToFarms: jest.fn(),
+      handleNavigateToCrops: jest.fn(),
+      handleNavigateToHarvests: jest.fn(),
+      handleNavigateToFarmCrops: jest.fn(),
+      createProducer: { mutate: jest.fn(), isPending: false },
+      updateProducer: { mutate: jest.fn(), isPending: false },
+      deleteProducer: { mutate: jest.fn(), isPending: false },
+    });
+
     renderWithTheme(<ProducersListPage />);
 
     expect(screen.getByText('Nenhum produtor cadastrado')).toBeInTheDocument();
