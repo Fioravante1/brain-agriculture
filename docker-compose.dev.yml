@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: brain-agriculture-db-dev
+    environment:
+      POSTGRES_DB: brain_agriculture
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - brain-agriculture-network
+
+  # Next.js Application (Development mode with hot reload)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: brain-agriculture-app-dev
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/brain_agriculture
+      NODE_ENV: development
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - brain-agriculture-network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo '⏳ Aguardando banco de dados...' &&
+        sleep 5 &&
+        echo '📦 Gerando cliente Prisma...' &&
+        yarn prisma generate &&
+        echo '🗄️  Aplicando schema ao banco...' &&
+        yarn prisma db push &&
+        echo '🌱 Populando banco (se vazio)...' &&
+        yarn db:seed &&
+        echo '🚀 Iniciando aplicação em modo desenvolvimento...' &&
+        yarn dev
+      "
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  brain-agriculture-network:
+    driver: bridge
