@@ -1,0 +1,1697 @@
+openapi: 3.0.3
+info:
+  title: Brain Agriculture API
+  description: |
+    Sistema de gerenciamento de produtores rurais desenvolvido com Next.js, TypeScript e PostgreSQL.
+
+    Esta API permite gerenciar produtores rurais, suas fazendas, culturas e safras, além de criar associações entre fazendas e culturas.
+
+    ## Funcionalidades Principais
+    - Gestão completa de produtores rurais (CRUD)
+    - Gestão de fazendas com validação de áreas
+    - Gestão de culturas agrícolas
+    - Gestão de safras por ano
+    - Associação fazenda-cultura-safra
+    - Dashboard com estatísticas e gráficos
+
+    ## Autenticação
+    Atualmente a API não requer autenticação, mas está preparada para implementação futura.
+
+    ## Validação
+    - CPF/CNPJ com validação completa
+    - Validação de áreas (total = agricultável + vegetação)
+    - Validação de dados obrigatórios
+    - Prevenção de duplicatas
+  version: 1.0.0
+  contact:
+    name: Brain Agriculture Team
+    email: contato@brainagriculture.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de desenvolvimento
+  - url: https://brain-agriculture.vercel.app/api
+    description: Servidor de produção
+
+tags:
+  - name: producers
+    description: Gestão de produtores rurais
+  - name: farms
+    description: Gestão de fazendas
+  - name: crops
+    description: Gestão de culturas
+  - name: harvests
+    description: Gestão de safras
+  - name: farm-crops
+    description: Associação fazenda-cultura-safra
+  - name: dashboard
+    description: Estatísticas e dashboard
+
+paths:
+  # PRODUTORES
+  /producers:
+    get:
+      tags:
+        - producers
+      summary: Lista todos os produtores
+      description: Retorna uma lista completa de todos os produtores cadastrados com suas fazendas e relacionamentos
+      responses:
+        '200':
+          description: Lista de produtores retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Producer'
+                  count:
+                    type: integer
+                    example: 5
+              examples:
+                success:
+                  summary: Lista de produtores
+                  value:
+                    success: true
+                    data:
+                      - id: '1'
+                        cpfCnpj: '123.456.789-09'
+                        name: 'João Silva'
+                        farms:
+                          - id: '1'
+                            name: 'Fazenda São José'
+                            producerId: '1'
+                            city: 'São Paulo'
+                            state: 'SP'
+                            totalArea: 100.5
+                            arableArea: 80.0
+                            vegetationArea: 20.5
+                            farmCrops: []
+                            producer:
+                              id: '1'
+                              cpfCnpj: '123.456.789-09'
+                              name: 'João Silva'
+                    count: 1
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - producers
+      summary: Cria novo produtor
+      description: Cria um novo produtor rural no sistema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProducerCreateRequest'
+            examples:
+              pessoa_fisica:
+                summary: Pessoa Física
+                value:
+                  cpfCnpj: '123.456.789-09'
+                  name: 'João Silva'
+              pessoa_juridica:
+                summary: Pessoa Jurídica
+                value:
+                  cpfCnpj: '12.345.678/0001-90'
+                  name: 'Agropecuária Santos Ltda'
+      responses:
+        '201':
+          description: Produtor criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Producer'
+                  message:
+                    type: string
+                    example: 'Produtor criado com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '409':
+          description: CPF/CNPJ já cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /producers/{id}:
+    get:
+      tags:
+        - producers
+      summary: Busca produtor por ID
+      description: Retorna os dados de um produtor específico pelo seu ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único do produtor
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Produtor encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Producer'
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - producers
+      summary: Atualiza produtor
+      description: Atualiza os dados de um produtor existente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único do produtor
+          schema:
+            type: string
+            example: '1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProducerUpdateRequest'
+      responses:
+        '200':
+          description: Produtor atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Producer'
+                  message:
+                    type: string
+                    example: 'Produtor atualizado com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: CPF/CNPJ já cadastrado em outro produtor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - producers
+      summary: Deleta produtor
+      description: Remove um produtor do sistema
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único do produtor
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Produtor deletado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Produtor deletado com sucesso'
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # FAZENDAS
+  /farms:
+    get:
+      tags:
+        - farms
+      summary: Lista todas as fazendas
+      description: Retorna uma lista completa de todas as fazendas cadastradas
+      responses:
+        '200':
+          description: Lista de fazendas retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Farm'
+                  count:
+                    type: integer
+                    example: 3
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - farms
+      summary: Cria nova fazenda
+      description: Cria uma nova fazenda no sistema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmCreateRequest'
+            examples:
+              fazenda_exemplo:
+                summary: Fazenda exemplo
+                value:
+                  producerId: '1'
+                  name: 'Fazenda São José'
+                  city: 'São Paulo'
+                  state: 'SP'
+                  totalArea: 100.5
+                  arableArea: 80.0
+                  vegetationArea: 20.5
+      responses:
+        '201':
+          description: Fazenda criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Farm'
+                  message:
+                    type: string
+                    example: 'Fazenda criada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /farms/{id}:
+    get:
+      tags:
+        - farms
+      summary: Busca fazenda por ID
+      description: Retorna os dados de uma fazenda específica pelo seu ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da fazenda
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Fazenda encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Farm'
+        '404':
+          description: Fazenda não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - farms
+      summary: Atualiza fazenda
+      description: Atualiza os dados de uma fazenda existente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da fazenda
+          schema:
+            type: string
+            example: '1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmUpdateRequest'
+      responses:
+        '200':
+          description: Fazenda atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Farm'
+                  message:
+                    type: string
+                    example: 'Fazenda atualizada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Fazenda não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - farms
+      summary: Deleta fazenda
+      description: Remove uma fazenda do sistema
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da fazenda
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Fazenda deletada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Fazenda deletada com sucesso'
+        '404':
+          description: Fazenda não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # CULTURAS
+  /crops:
+    get:
+      tags:
+        - crops
+      summary: Lista todas as culturas
+      description: Retorna uma lista completa de todas as culturas cadastradas
+      responses:
+        '200':
+          description: Lista de culturas retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Crop'
+                  count:
+                    type: integer
+                    example: 5
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - crops
+      summary: Cria nova cultura
+      description: Cria uma nova cultura agrícola no sistema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CropCreateRequest'
+            examples:
+              cultura_exemplo:
+                summary: Cultura exemplo
+                value:
+                  name: 'Soja'
+      responses:
+        '201':
+          description: Cultura criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Crop'
+                  message:
+                    type: string
+                    example: 'Cultura criada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /crops/{id}:
+    get:
+      tags:
+        - crops
+      summary: Busca cultura por ID
+      description: Retorna os dados de uma cultura específica pelo seu ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da cultura
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Cultura encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Crop'
+        '404':
+          description: Cultura não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - crops
+      summary: Atualiza cultura
+      description: Atualiza os dados de uma cultura existente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da cultura
+          schema:
+            type: string
+            example: '1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CropUpdateRequest'
+      responses:
+        '200':
+          description: Cultura atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Crop'
+                  message:
+                    type: string
+                    example: 'Cultura atualizada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Cultura não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - crops
+      summary: Deleta cultura
+      description: Remove uma cultura do sistema
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da cultura
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Cultura deletada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Cultura deletada com sucesso'
+        '404':
+          description: Cultura não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # SAFRAS
+  /harvests:
+    get:
+      tags:
+        - harvests
+      summary: Lista todas as safras
+      description: Retorna uma lista completa de todas as safras cadastradas
+      responses:
+        '200':
+          description: Lista de safras retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Harvest'
+                  count:
+                    type: integer
+                    example: 3
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - harvests
+      summary: Cria nova safra
+      description: Cria uma nova safra no sistema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HarvestCreateRequest'
+            examples:
+              safra_exemplo:
+                summary: Safra exemplo
+                value:
+                  name: 'Safra 2024/2025'
+                  year: 2024
+      responses:
+        '201':
+          description: Safra criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Harvest'
+                  message:
+                    type: string
+                    example: 'Safra criada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /harvests/{id}:
+    get:
+      tags:
+        - harvests
+      summary: Busca safra por ID
+      description: Retorna os dados de uma safra específica pelo seu ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da safra
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Safra encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Harvest'
+        '404':
+          description: Safra não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - harvests
+      summary: Atualiza safra
+      description: Atualiza os dados de uma safra existente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da safra
+          schema:
+            type: string
+            example: '1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HarvestUpdateRequest'
+      responses:
+        '200':
+          description: Safra atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Harvest'
+                  message:
+                    type: string
+                    example: 'Safra atualizada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Safra não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - harvests
+      summary: Deleta safra
+      description: Remove uma safra do sistema
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da safra
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Safra deletada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Safra deletada com sucesso'
+        '404':
+          description: Safra não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ASSOCIAÇÕES FAZENDA-CULTURA-SAFRA
+  /farm-crops:
+    get:
+      tags:
+        - farm-crops
+      summary: Lista todas as associações
+      description: Retorna uma lista completa de todas as associações fazenda-cultura-safra
+      responses:
+        '200':
+          description: Lista de associações retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FarmCrop'
+                  count:
+                    type: integer
+                    example: 5
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - farm-crops
+      summary: Cria nova associação
+      description: Cria uma nova associação entre fazenda, cultura e safra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmCropCreateRequest'
+            examples:
+              associacao_exemplo:
+                summary: Associação exemplo
+                value:
+                  farmId: '1'
+                  cropId: '1'
+                  harvestId: '1'
+      responses:
+        '201':
+          description: Associação criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/FarmCrop'
+                  message:
+                    type: string
+                    example: 'Associação criada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /farm-crops/{id}:
+    get:
+      tags:
+        - farm-crops
+      summary: Busca associação por ID
+      description: Retorna os dados de uma associação específica pelo seu ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da associação
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Associação encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/FarmCrop'
+        '404':
+          description: Associação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - farm-crops
+      summary: Atualiza associação
+      description: Atualiza os dados de uma associação existente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da associação
+          schema:
+            type: string
+            example: '1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmCropUpdateRequest'
+      responses:
+        '200':
+          description: Associação atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/FarmCrop'
+                  message:
+                    type: string
+                    example: 'Associação atualizada com sucesso'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Associação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - farm-crops
+      summary: Deleta associação
+      description: Remove uma associação do sistema
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único da associação
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: Associação deletada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Associação deletada com sucesso'
+        '404':
+          description: Associação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # DASHBOARD
+  /dashboard/stats:
+    get:
+      tags:
+        - dashboard
+      summary: Estatísticas do dashboard
+      description: Retorna estatísticas gerais do sistema para o dashboard
+      responses:
+        '200':
+          description: Estatísticas retornadas com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DashboardStats'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Producer:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único do produtor
+          example: '1'
+        cpfCnpj:
+          type: string
+          description: CPF ou CNPJ do produtor (formatado)
+          example: '123.456.789-09'
+        name:
+          type: string
+          description: Nome do produtor
+          example: 'João Silva'
+        farms:
+          type: array
+          description: Lista de fazendas do produtor
+          items:
+            $ref: '#/components/schemas/Farm'
+      required:
+        - id
+        - cpfCnpj
+        - name
+        - farms
+
+    Farm:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único da fazenda
+          example: '1'
+        name:
+          type: string
+          description: Nome da fazenda
+          example: 'Fazenda São José'
+        producerId:
+          type: string
+          description: ID do produtor proprietário
+          example: '1'
+        city:
+          type: string
+          description: Cidade da fazenda
+          example: 'São Paulo'
+        state:
+          type: string
+          description: Estado da fazenda (sigla)
+          example: 'SP'
+        totalArea:
+          type: number
+          format: float
+          description: Área total da fazenda em hectares
+          example: 100.5
+        arableArea:
+          type: number
+          format: float
+          description: Área agricultável em hectares
+          example: 80.0
+        vegetationArea:
+          type: number
+          format: float
+          description: Área de vegetação em hectares
+          example: 20.5
+        farmCrops:
+          type: array
+          description: Lista de associações fazenda-cultura-safra
+          items:
+            $ref: '#/components/schemas/FarmCrop'
+        producer:
+          $ref: '#/components/schemas/Producer'
+      required:
+        - id
+        - name
+        - producerId
+        - city
+        - state
+        - totalArea
+        - arableArea
+        - vegetationArea
+        - farmCrops
+        - producer
+
+    Crop:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único da cultura
+          example: '1'
+        name:
+          type: string
+          description: Nome da cultura
+          example: 'Soja'
+      required:
+        - id
+        - name
+
+    Harvest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único da safra
+          example: '1'
+        name:
+          type: string
+          description: Nome da safra
+          example: 'Safra 2024/2025'
+        year:
+          type: integer
+          description: Ano da safra
+          example: 2024
+      required:
+        - id
+        - name
+        - year
+
+    FarmCrop:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único da associação
+          example: '1'
+        farmId:
+          type: string
+          description: ID da fazenda
+          example: '1'
+        cropId:
+          type: string
+          description: ID da cultura
+          example: '1'
+        harvestId:
+          type: string
+          description: ID da safra
+          example: '1'
+        farm:
+          $ref: '#/components/schemas/Farm'
+        crop:
+          $ref: '#/components/schemas/Crop'
+        harvest:
+          $ref: '#/components/schemas/Harvest'
+      required:
+        - id
+        - farmId
+        - cropId
+        - harvestId
+        - farm
+        - crop
+        - harvest
+
+    DashboardStats:
+      type: object
+      properties:
+        totalProducers:
+          type: integer
+          description: Total de produtores cadastrados
+          example: 25
+        totalFarms:
+          type: integer
+          description: Total de fazendas cadastradas
+          example: 45
+        totalCrops:
+          type: integer
+          description: Total de culturas cadastradas
+          example: 8
+        totalHarvests:
+          type: integer
+          description: Total de safras cadastradas
+          example: 5
+        totalFarmCrops:
+          type: integer
+          description: Total de associações fazenda-cultura-safra
+          example: 120
+        totalArea:
+          type: number
+          format: float
+          description: Área total de todas as fazendas em hectares
+          example: 2500.75
+        arableArea:
+          type: number
+          format: float
+          description: Área agricultável total em hectares
+          example: 2000.50
+        vegetationArea:
+          type: number
+          format: float
+          description: Área de vegetação total em hectares
+          example: 500.25
+        cropsDistribution:
+          type: array
+          description: Distribuição de culturas por área
+          items:
+            type: object
+            properties:
+              cropName:
+                type: string
+                example: 'Soja'
+              area:
+                type: number
+                format: float
+                example: 800.5
+              percentage:
+                type: number
+                format: float
+                example: 40.0
+        producersByState:
+          type: array
+          description: Distribuição de produtores por estado
+          items:
+            type: object
+            properties:
+              state:
+                type: string
+                example: 'SP'
+              count:
+                type: integer
+                example: 10
+              percentage:
+                type: number
+                format: float
+                example: 40.0
+      required:
+        - totalProducers
+        - totalFarms
+        - totalCrops
+        - totalHarvests
+        - totalFarmCrops
+        - totalArea
+        - arableArea
+        - vegetationArea
+        - cropsDistribution
+        - producersByState
+
+    # Request Schemas
+    ProducerCreateRequest:
+      type: object
+      properties:
+        cpfCnpj:
+          type: string
+          description: CPF ou CNPJ do produtor (formatado)
+          example: '123.456.789-09'
+        name:
+          type: string
+          description: Nome do produtor
+          example: 'João Silva'
+      required:
+        - cpfCnpj
+        - name
+
+    ProducerUpdateRequest:
+      type: object
+      properties:
+        cpfCnpj:
+          type: string
+          description: CPF ou CNPJ do produtor (formatado)
+          example: '123.456.789-09'
+        name:
+          type: string
+          description: Nome do produtor
+          example: 'João Silva'
+      required:
+        - cpfCnpj
+        - name
+
+    FarmCreateRequest:
+      type: object
+      properties:
+        producerId:
+          type: string
+          description: ID do produtor proprietário
+          example: '1'
+        name:
+          type: string
+          description: Nome da fazenda
+          example: 'Fazenda São José'
+        city:
+          type: string
+          description: Cidade da fazenda
+          example: 'São Paulo'
+        state:
+          type: string
+          description: Estado da fazenda (sigla)
+          example: 'SP'
+        totalArea:
+          type: number
+          format: float
+          description: Área total da fazenda em hectares
+          example: 100.5
+        arableArea:
+          type: number
+          format: float
+          description: Área agricultável em hectares
+          example: 80.0
+        vegetationArea:
+          type: number
+          format: float
+          description: Área de vegetação em hectares
+          example: 20.5
+      required:
+        - producerId
+        - name
+        - city
+        - state
+        - totalArea
+        - arableArea
+        - vegetationArea
+
+    FarmUpdateRequest:
+      type: object
+      properties:
+        producerId:
+          type: string
+          description: ID do produtor proprietário
+          example: '1'
+        name:
+          type: string
+          description: Nome da fazenda
+          example: 'Fazenda São José'
+        city:
+          type: string
+          description: Cidade da fazenda
+          example: 'São Paulo'
+        state:
+          type: string
+          description: Estado da fazenda (sigla)
+          example: 'SP'
+        totalArea:
+          type: number
+          format: float
+          description: Área total da fazenda em hectares
+          example: 100.5
+        arableArea:
+          type: number
+          format: float
+          description: Área agricultável em hectares
+          example: 80.0
+        vegetationArea:
+          type: number
+          format: float
+          description: Área de vegetação em hectares
+          example: 20.5
+      required:
+        - producerId
+        - name
+        - city
+        - state
+        - totalArea
+        - arableArea
+        - vegetationArea
+
+    CropCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome da cultura
+          example: 'Soja'
+      required:
+        - name
+
+    CropUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome da cultura
+          example: 'Soja'
+      required:
+        - name
+
+    HarvestCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome da safra
+          example: 'Safra 2024/2025'
+        year:
+          type: integer
+          description: Ano da safra
+          example: 2024
+      required:
+        - name
+        - year
+
+    HarvestUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome da safra
+          example: 'Safra 2024/2025'
+        year:
+          type: integer
+          description: Ano da safra
+          example: 2024
+      required:
+        - name
+        - year
+
+    FarmCropCreateRequest:
+      type: object
+      properties:
+        farmId:
+          type: string
+          description: ID da fazenda
+          example: '1'
+        cropId:
+          type: string
+          description: ID da cultura
+          example: '1'
+        harvestId:
+          type: string
+          description: ID da safra
+          example: '1'
+      required:
+        - farmId
+        - cropId
+        - harvestId
+
+    FarmCropUpdateRequest:
+      type: object
+      properties:
+        farmId:
+          type: string
+          description: ID da fazenda
+          example: '1'
+        cropId:
+          type: string
+          description: ID da cultura
+          example: '1'
+        harvestId:
+          type: string
+          description: ID da safra
+          example: '1'
+      required:
+        - farmId
+        - cropId
+        - harvestId
+
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Tipo do erro
+          example: 'Produtor não encontrado'
+        message:
+          type: string
+          description: Mensagem descritiva do erro
+          example: 'Nenhum produtor encontrado com este ID'
+      required:
+        - success
+        - error
+        - message
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Tipo do erro
+          example: 'Dados inválidos'
+        message:
+          type: string
+          description: Mensagem descritiva do erro
+          example: 'Verifique os dados enviados'
+        details:
+          type: array
+          description: Detalhes dos erros de validação
+          items:
+            type: object
+            properties:
+              path:
+                type: array
+                items:
+                  type: string
+                example: ['cpfCnpj']
+              message:
+                type: string
+                example: 'CPF/CNPJ é obrigatório'
+      required:
+        - success
+        - error
+        - message
+        - details
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+    description: |
+      Autenticação via JWT Bearer Token.
+      Atualmente não implementada, mas preparada para uso futuro.
+
+      Exemplo de uso:
+      ```
+      Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      ```
