@@ -20,19 +20,6 @@ Instale a extensão **Markdown Preview Mermaid Support**:
 4. Instale e recarregue
 5. Abra este arquivo e use Preview (Ctrl+Shift+V)
 
-### Opção 3: Online
-
-Copie o código Mermaid e cole em:
-
-- https://mermaid.live/ (Editor oficial)
-- https://mermaid.ink/ (Gerador de imagens)
-
-### Opção 4: Outras IDEs
-
-- **IntelliJ/WebStorm**: Plugin "Mermaid"
-- **Obsidian**: Suporte nativo
-- **Notion**: Suporte nativo
-
 ---
 
 ## 🏗️ Arquitetura FSD
@@ -42,27 +29,27 @@ Copie o código Mermaid e cole em:
 ```mermaid
 graph TB
     subgraph "App Layer"
-        APP[App Router<br/>pages & routes]
+        APP[App Router - pages & routes]
     end
 
     subgraph "Page Compositions"
-        PAGES[Páginas Compostas<br/>CropsListPage, DashboardPage]
+        PAGES[Páginas Compostas - CropsListPage, DashboardPage]
     end
 
     subgraph "Features"
-        FEATURES[Funcionalidades de Negócio<br/>Forms, Hooks de Página]
+        FEATURES[Funcionalidades de Negócio - Forms, Hooks de Página]
     end
 
     subgraph "Widgets"
-        WIDGETS[Componentes Complexos<br/>StatCard, PieChartCard]
+        WIDGETS[Componentes Complexos - StatCard, PieChartCard]
     end
 
     subgraph "Entities"
-        ENTITIES[Lógica de Domínio<br/>Producer, Farm, Crop, Harvest]
+        ENTITIES[Lógica de Domínio - Producer, Farm, Crop, Harvest]
     end
 
     subgraph "Shared"
-        SHARED[UI Base & Utils<br/>Button, Input, Toast, Theme]
+        SHARED[UI Base & Utils - Button, Input, Toast, Theme]
     end
 
     APP --> PAGES
@@ -165,15 +152,15 @@ erDiagram
 ```mermaid
 graph LR
     subgraph "Frontend"
-        UI[Componente UI<br/>ProducerForm]
-        HOOK[Hook de Página<br/>useProducersListPage]
-        ENTITY[Entity Hook<br/>useCreateProducer]
-        API[API Client<br/>createProducer]
+        UI[Componente UI - ProducerForm]
+        HOOK[Hook de Página - useProducersListPage]
+        ENTITY[Entity Hook - useCreateProducer]
+        API[API Client - createProducer]
     end
 
     subgraph "Backend"
-        ROUTE[API Route<br/>/api/producers]
-        VALID[Validação<br/>Zod Schema]
+        ROUTE[API Route - /api/producers]
+        VALID[Validação - Zod Schema]
         PRISMA[Prisma ORM]
         DB[(PostgreSQL)]
     end
@@ -270,8 +257,8 @@ graph TB
     end
 
     subgraph "Backend"
-        API["API: /api/dashboard/stats"]
-        AGG["Agregações"]
+        API[API Route]
+        AGG[Agregações]
     end
 
     subgraph "Database"
@@ -319,20 +306,20 @@ graph TB
 ```mermaid
 graph TB
     subgraph "entities/producer"
-        INDEX[index.ts<br/>Public API]
+        INDEX[index.ts - Public API]
 
         subgraph "api"
-            API[producer.api.ts<br/>HTTP Calls]
+            API[producer.api.ts - HTTP Calls]
             APITEST[producer.api.test.ts]
         end
 
         subgraph "hooks"
-            HOOKS[use-producer-service.hook.ts<br/>React Query]
+            HOOKS[use-producer-service.hook.ts - React Query]
             HOOKTEST[use-producer-service.hook.test.tsx]
         end
 
         subgraph "model"
-            MODEL[producer.model.ts<br/>Types & Interfaces]
+            MODEL[producer.model.ts - Types & Interfaces]
         end
 
         subgraph "lib"
@@ -365,16 +352,16 @@ graph TB
 ```mermaid
 graph TB
     subgraph "features/crops"
-        FINDEX[index.ts<br/>Public API]
+        FINDEX[index.ts - Public API]
 
         subgraph "hooks"
-            PAGEHOOK[use-crops-list-page.hook.ts<br/>Lógica de Página]
+            PAGEHOOK[use-crops-list-page.hook.ts - Lógica de Página]
             PHTEST[use-crops-list-page.hook.test.tsx]
         end
 
         subgraph "ui"
-            FORM[crop-form.tsx<br/>Formulário]
-            SCHEMA[crop-form.schema.ts<br/>Validação Zod]
+            FORM[crop-form.tsx - Formulário]
+            SCHEMA[crop-form.schema.ts - Validação Zod]
             FORMTEST[crop-form.test.tsx]
         end
 
@@ -463,13 +450,13 @@ graph LR
 ```mermaid
 graph TB
     subgraph "Contexts"
-        TC[ToastContext<br/>Estado Global]
-        CC[ConfirmContext<br/>Estado Global]
+        TC[ToastContext - Estado Global]
+        CC[ConfirmContext - Estado Global]
     end
 
     subgraph "Componentes UI"
-        TOAST[Toast<br/>Notificações]
-        CONFIRM[ConfirmDialog<br/>Confirmações]
+        TOAST[Toast - Notificações]
+        CONFIRM[ConfirmDialog - Confirmações]
     end
 
     subgraph "Hooks"
@@ -689,9 +676,9 @@ sequenceDiagram
 ```mermaid
 graph TB
     subgraph "1493 Testes"
-        E2E["E2E Tests<br/>(Planejado)<br/>0 testes"]
-        INT["Integration Tests<br/>Hooks + API Routes<br/>~400 testes"]
-        UNIT["Unit Tests<br/>Components + Utils<br/>~1093 testes"]
+        E2E[E2E Tests - Planejado]
+        INT[Integration Tests - 400 testes]
+        UNIT[Unit Tests - 1093 testes]
     end
 
     E2E -.-> INT
