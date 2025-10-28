@@ -43,7 +43,10 @@ jest.mock('@/features/harvests/config/harvests-table-columns', () => ({
       key: 'createdAt',
       header: 'Criada em',
       width: '20%',
-      render: (harvest: any) => new Date(harvest.createdAt).toLocaleDateString('pt-BR'),
+      render: (harvest: any) => {
+        const { formatDateUTC } = require('@/shared/lib/utils/format');
+        return formatDateUTC(harvest.createdAt);
+      },
     },
     {
       key: 'actions',
@@ -59,22 +62,22 @@ const mockHarvests: Harvest[] = [
     id: '1',
     name: 'Safra 2021',
     year: 2021,
-    createdAt: new Date('2021-01-01'),
-    updatedAt: new Date('2021-01-01'),
+    createdAt: new Date('2021-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2021-01-01T00:00:00.000Z'),
   },
   {
     id: '2',
     name: 'Safra 2022',
     year: 2022,
-    createdAt: new Date('2022-01-01'),
-    updatedAt: new Date('2022-01-01'),
+    createdAt: new Date('2022-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2022-01-01T00:00:00.000Z'),
   },
   {
     id: '3',
     name: 'Safra 2023',
     year: 2023,
-    createdAt: new Date('2023-01-01'),
-    updatedAt: new Date('2023-01-01'),
+    createdAt: new Date('2023-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2023-01-01T00:00:00.000Z'),
   },
 ];
 
@@ -148,9 +151,9 @@ describe('Componente HarvestsListPage', () => {
 
   it('deve renderizar datas de criação das safras na tabela', () => {
     renderWithTheme(<HarvestsListPage />);
-    expect(screen.getByText('31/12/2020')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2021')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2022')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2021')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2022')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2023')).toBeInTheDocument();
   });
 
   it('deve renderizar botões de ação para cada safra', () => {
@@ -397,9 +400,9 @@ describe('Componente HarvestsListPage', () => {
     renderWithTheme(<HarvestsListPage />);
 
     // Verifica se as datas estão no formato brasileiro
-    expect(screen.getByText('31/12/2020')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2021')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2022')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2021')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2022')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2023')).toBeInTheDocument();
   });
 
   it('deve renderizar com botões desabilitados durante exclusão', () => {
@@ -508,17 +511,17 @@ describe('Componente HarvestsListPage', () => {
     // Verifica dados da primeira safra
     expect(screen.getByText('Safra 2021')).toBeInTheDocument();
     expect(screen.getByText('2021')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2020')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2021')).toBeInTheDocument();
 
     // Verifica dados da segunda safra
     expect(screen.getByText('Safra 2022')).toBeInTheDocument();
     expect(screen.getByText('2022')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2021')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2022')).toBeInTheDocument();
 
     // Verifica dados da terceira safra
     expect(screen.getByText('Safra 2023')).toBeInTheDocument();
     expect(screen.getByText('2023')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2022')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2023')).toBeInTheDocument();
   });
 
   it('deve renderizar com anos formatados como strings', () => {
@@ -534,9 +537,9 @@ describe('Componente HarvestsListPage', () => {
     renderWithTheme(<HarvestsListPage />);
 
     // Verifica se as datas estão no formato brasileiro (DD/MM/AAAA)
-    expect(screen.getByText('31/12/2020')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2021')).toBeInTheDocument();
-    expect(screen.getByText('31/12/2022')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2021')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2022')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2023')).toBeInTheDocument();
   });
 
   it('deve renderizar com botões de ação para cada safra', () => {
