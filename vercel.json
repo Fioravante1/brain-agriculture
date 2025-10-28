@@ -1,9 +1,4 @@
 {
   "buildCommand": "yarn prisma generate && yarn next build",
-  "installCommand": "yarn install",
-  "functions": {
-    "app/api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  "installCommand": "yarn install"
 }
