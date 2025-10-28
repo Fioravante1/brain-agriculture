@@ -4,11 +4,11 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   experimental: {
     esmExternals: true,
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
   },
   compiler: {
     reactRemoveProperties: true,
   },
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   outputFileTracingIncludes: {
     '/api/**/*': ['./node_modules/.prisma/client/**/*'],
   },
