@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   compiler: {
     reactRemoveProperties: true,
   },
+  // Força o Next.js a usar apenas App Router e ignorar /pages
+  // Referência: https://feature-sliced.design/docs/guides/tech/with-nextjs
+  // A pasta /pages vazia na raiz existe apenas para evitar que o Next.js
+  // use /src/page-compositions como Pages Router
 };
 
 export default nextConfig;

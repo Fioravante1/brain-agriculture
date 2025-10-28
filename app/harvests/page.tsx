@@ -1,1 +1,1 @@
-export { HarvestsListPage as default } from '@/pages/harvests';
+export { HarvestsListPage as default } from '@/page-compositions/harvests';

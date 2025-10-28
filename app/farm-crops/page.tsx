@@ -1,1 +1,1 @@
-export { FarmCropsListPage as default } from '@/pages/farm-crops';
+export { FarmCropsListPage as default } from '@/page-compositions/farm-crops';
