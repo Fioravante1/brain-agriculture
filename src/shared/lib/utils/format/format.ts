@@ -40,3 +40,22 @@ export function formatNumber(value: number): string {
 export function formatHectares(value: number): string {
   return `${formatNumber(value)} ha`;
 }
+
+/**
+ * Formata uma data em UTC usando o formato pt-BR (dd/mm/aaaa)
+ * Garante consistência independente do timezone local
+ */
+export function formatDateUTC(date: Date | string | number): string {
+  const dateUTC = new Date(date);
+
+  if (isNaN(dateUTC.getTime())) {
+    return 'Invalid Date';
+  }
+
+  return dateUTC.toLocaleDateString('pt-BR', {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}

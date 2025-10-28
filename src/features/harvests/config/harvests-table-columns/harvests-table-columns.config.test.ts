@@ -1,4 +1,5 @@
 import { HARVESTS_TABLE_COLUMNS } from './harvests-table-columns.config';
+import { formatDateUTC } from '@/shared/lib/utils/format';
 
 describe('HARVESTS_TABLE_COLUMNS', () => {
   it('deve ter estrutura correta das colunas', () => {
@@ -29,8 +30,8 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
       id: '1',
       name: 'Safra 2021',
       year: 2021,
-      createdAt: new Date('2021-01-01'),
-      updatedAt: new Date('2021-01-01'),
+      createdAt: new Date('2021-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
     };
 
     const result = HARVESTS_TABLE_COLUMNS[1].render!(harvest);
@@ -42,12 +43,12 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
       id: '1',
       name: 'Safra 2021',
       year: 2021,
-      createdAt: new Date('2021-01-01'),
-      updatedAt: new Date('2021-01-01'),
+      createdAt: new Date('2021-01-01T00:00:00.000Z'), // UTC explícito
+      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
     };
 
     const result = HARVESTS_TABLE_COLUMNS[2].render!(harvest);
-    expect(result).toBe('31/12/2020');
+    expect(result).toBe('01/01/2021');
   });
 
   it('deve renderizar ações corretamente', () => {
@@ -55,8 +56,8 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
       id: '1',
       name: 'Safra 2021',
       year: 2021,
-      createdAt: new Date('2021-01-01'),
-      updatedAt: new Date('2021-01-01'),
+      createdAt: new Date('2021-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
     };
 
     const result = HARVESTS_TABLE_COLUMNS[3].render!(harvest);
@@ -68,8 +69,8 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
       id: '1',
       name: 'Safra 2021',
       year: undefined as unknown as number,
-      createdAt: new Date('2021-01-01'),
-      updatedAt: new Date('2021-01-01'),
+      createdAt: new Date('2021-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
     };
 
     expect(() => HARVESTS_TABLE_COLUMNS[1].render!(harvest)).toThrow();
@@ -80,8 +81,8 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
       id: '1',
       name: 'Safra 2021',
       year: null as unknown as number,
-      createdAt: new Date('2021-01-01'),
-      updatedAt: new Date('2021-01-01'),
+      createdAt: new Date('2021-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
     };
 
     expect(() => HARVESTS_TABLE_COLUMNS[1].render!(harvest)).toThrow();
@@ -93,7 +94,7 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
       name: 'Safra 2021',
       year: 2021,
       createdAt: undefined as unknown as Date,
-      updatedAt: new Date('2021-01-01'),
+      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
     };
 
     const result = HARVESTS_TABLE_COLUMNS[2].render!(harvest);
@@ -106,11 +107,11 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
       name: 'Safra 2021',
       year: 2021,
       createdAt: null as unknown as Date,
-      updatedAt: new Date('2021-01-01'),
+      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
     };
 
     const result = HARVESTS_TABLE_COLUMNS[2].render!(harvest);
-    expect(result).toBe('31/12/1969');
+    expect(result).toBe('01/01/1970'); // Epoch em UTC
   });
 
   it('deve renderizar diferentes anos', () => {
@@ -121,8 +122,8 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
         id: '1',
         name: 'Safra 2021',
         year,
-        createdAt: new Date('2021-01-01'),
-        updatedAt: new Date('2021-01-01'),
+        createdAt: new Date('2021-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2021-01-01T00:00:00.000Z'),
       };
 
       const result = HARVESTS_TABLE_COLUMNS[1].render!(harvest);
@@ -131,7 +132,11 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
   });
 
   it('deve renderizar diferentes datas de criação', () => {
-    const dates = [new Date('2020-01-01'), new Date('2021-06-15'), new Date('2022-12-31')];
+    const dates = [
+      new Date('2020-01-01T00:00:00.000Z'),
+      new Date('2021-06-15T00:00:00.000Z'),
+      new Date('2022-12-31T00:00:00.000Z'),
+    ];
 
     dates.forEach(date => {
       const harvest = {
@@ -139,11 +144,11 @@ describe('HARVESTS_TABLE_COLUMNS', () => {
         name: 'Safra 2021',
         year: 2021,
         createdAt: date,
-        updatedAt: new Date('2021-01-01'),
+        updatedAt: new Date('2021-01-01T00:00:00.000Z'),
       };
 
       const result = HARVESTS_TABLE_COLUMNS[2].render!(harvest);
-      expect(result).toBe(date.toLocaleDateString('pt-BR'));
+      expect(result).toBe(formatDateUTC(date));
     });
   });
 

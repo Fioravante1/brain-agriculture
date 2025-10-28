@@ -1,4 +1,5 @@
 import { Harvest } from '@/entities/harvest';
+import { formatDateUTC } from '@/shared/lib/utils/format';
 
 export const HARVESTS_TABLE_COLUMNS = [
   {
@@ -16,7 +17,7 @@ export const HARVESTS_TABLE_COLUMNS = [
     key: 'createdAt',
     header: 'Criada em',
     width: '20%',
-    render: (harvest: Harvest) => new Date(harvest.createdAt).toLocaleDateString('pt-BR'),
+    render: (harvest: Harvest) => formatDateUTC(harvest.createdAt),
   },
   {
     key: 'actions',

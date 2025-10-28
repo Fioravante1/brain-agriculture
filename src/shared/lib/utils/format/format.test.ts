@@ -1,4 +1,4 @@
-import { formatCPFOrCNPJ, formatNumber, formatHectares } from './format';
+import { formatCPFOrCNPJ, formatNumber, formatHectares, formatDateUTC } from './format';
 
 describe('formatCPFOrCNPJ', () => {
   it('should format CPF correctly', () => {
@@ -51,5 +51,33 @@ describe('formatHectares', () => {
 
   it('should format large values correctly', () => {
     expect(formatHectares(1000000)).toBe('1.000.000 ha');
+  });
+});
+
+describe('formatDateUTC', () => {
+  it('should format dates in UTC using pt-BR format', () => {
+    expect(formatDateUTC(new Date('2021-01-01T00:00:00.000Z'))).toBe('01/01/2021');
+    expect(formatDateUTC(new Date('2022-12-31T23:59:59.999Z'))).toBe('31/12/2022');
+  });
+
+  it('should handle string dates', () => {
+    expect(formatDateUTC('2021-06-15T00:00:00.000Z')).toBe('15/06/2021');
+  });
+
+  it('should handle timestamp numbers', () => {
+    expect(formatDateUTC(0)).toBe('01/01/1970'); // Unix epoch in UTC
+    expect(formatDateUTC(1609459200000)).toBe('01/01/2021'); // 2021-01-01 00:00:00 UTC
+  });
+
+  it('should return "Invalid Date" for invalid dates', () => {
+    expect(formatDateUTC('invalid')).toBe('Invalid Date');
+    expect(formatDateUTC(NaN)).toBe('Invalid Date');
+  });
+
+  it('should be consistent regardless of local timezone', () => {
+    // This date is midnight UTC, which would be 21:00 of previous day in UTC-3 (Brazil)
+    // But formatDateUTC should always show the UTC date
+    const date = new Date('2021-01-01T00:00:00.000Z');
+    expect(formatDateUTC(date)).toBe('01/01/2021');
   });
 });
