@@ -7,6 +7,8 @@ Sistema completo de gerenciamento de produtores rurais desenvolvido com **Next.j
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
 [![Tests](https://img.shields.io/badge/Tests-1465%20passing-success)](./docs/project/status.md) [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](./docs/setup/docker.md)
 [![API](https://img.shields.io/badge/API-OpenAPI-green)](./docs/api/openapi.yaml)
+[![CI Pipeline](https://github.com/fioravante1/brain-agriculture/actions/workflows/ci.yml/badge.svg)](https://github.com/fioravante1/brain-agriculture/actions/workflows/ci.yml)
+[![Deploy to Vercel](https://github.com/fioravante1/brain-agriculture/actions/workflows/deploy-vercel.yml/badge.svg)](https://github.com/fioravante1/brain-agriculture/actions/workflows/deploy-vercel.yml)
 
 [Documentação](./docs/) • [API](./docs/api/) • [Arquitetura](./docs/architecture/)
 
@@ -109,6 +111,8 @@ yarn dev
 - **Jest** - Testes unitários
 - **React Testing Library** - Testes de componentes
 - **ESLint** - Linting
+- **GitHub Actions** - CI/CD Pipeline
+- **Vercel** - Deploy automático
 
 📖 **[Ver arquitetura completa →](./docs/architecture/fsd.md)**
 
@@ -229,14 +233,6 @@ yarn test:watch
 ```
 
 ---
-
-## 📚 Documentação
-
-### 📖 Guias Principais
-
-| Documento                         | Descrição               |
-| --------------------------------- | ----------------------- | --- | --------- |
-| **[📖 Índice Completo](./docs/)** | Central de documentação |     | Perguntas |
 
 ### 🏗️ Arquitetura
 
