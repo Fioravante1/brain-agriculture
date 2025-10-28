@@ -41,8 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-/docs
-
 /src/generated/prisma
 
 .cursorrules

@@ -5,12 +5,13 @@
 Sistema completo de gerenciamento de produtores rurais desenvolvido com **Next.js**, **TypeScript** e **PostgreSQL**.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-1465%20passing-success)](./docs/project/status.md) [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](./docs/setup/docker.md)
-[![API](https://img.shields.io/badge/API-OpenAPI-green)](./docs/api/openapi.yaml)
+[![Tests](https://img.shields.io/badge/Tests-1493%20passing-success)](#-testes)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](./docs/quick-start.md)
+[![API](https://img.shields.io/badge/API-OpenAPI-green)](./docs/api-reference.md)
 [![CI Pipeline](https://github.com/fioravante1/brain-agriculture/actions/workflows/ci.yml/badge.svg)](https://github.com/fioravante1/brain-agriculture/actions/workflows/ci.yml)
 [![Deploy to Vercel](https://github.com/fioravante1/brain-agriculture/actions/workflows/deploy-vercel.yml/badge.svg)](https://github.com/fioravante1/brain-agriculture/actions/workflows/deploy-vercel.yml)
 
-[Documentação](./docs/) • [API](./docs/api/) • [Arquitetura](./docs/architecture/)
+[📚 Documentação](./docs/) • [🔌 API](./docs/api-reference.md) • [🏗️ Arquitetura](./docs/architecture.md)
 
 </div>
 
@@ -18,19 +19,71 @@ Sistema completo de gerenciamento de produtores rurais desenvolvido com **Next.j
 
 ## 📋 Sobre o Projeto
 
-O Brain Agriculture é um sistema para gestão de produtores rurais, suas fazendas, culturas e safras. Desenvolvido como teste técnico, o projeto demonstra boas práticas de
-desenvolvimento, arquitetura limpa e código de qualidade.
+Sistema para gestão de produtores rurais, suas fazendas, culturas e safras. Desenvolvido seguindo **Feature-Sliced Design (FSD)** com foco em arquitetura limpa, código de qualidade e boas práticas de desenvolvimento.
 
-### ✨ Funcionalidades
+---
 
-- ✅ **Gestão de Produtores** - CRUD completo com validação CPF/CNPJ
-- ✅ **Gestão de Fazendas** - Controle de áreas (total, agricultável, vegetação)
-- ✅ **Culturas e Safras** - Registro de plantios por safra
+## 🏗️ Arquitetura
+
+O projeto utiliza **Feature-Sliced Design (FSD)**, uma arquitetura modular que organiza o código em camadas:
+
+- **🎯 App Layer** - Rotas e configuração global do Next.js
+- **📦 Entities** - Lógica de domínio (Producer, Farm, Crop, Harvest)
+- **⚡ Features** - Funcionalidades de negócio (Forms, Dashboard)
+- **📄 Page Compositions** - Composição de páginas
+- **🧩 Widgets** - Componentes complexos reutilizáveis
+- **🔧 Shared** - UI base, utils, theme, contexts
+
+**Benefícios:**
+
+- ✅ Separação clara de responsabilidades
+- ✅ Baixo acoplamento entre módulos
+- ✅ Alta testabilidade (1493 testes)
+- ✅ Fácil manutenção e escalabilidade
+
+📖 **[Documentação completa →](./docs/architecture.md)** | **[Ver diagramas →](./docs/diagrams.md)**
+
+---
+
+## 📐 Regras de Negócio
+
+### Validações de Produtores
+
+- CPF deve ter 11 dígitos válidos
+- CNPJ deve ter 14 dígitos válidos
+- Nome é obrigatório
+
+### Validações de Fazendas
+
+- **Soma das áreas:** `areaAgricultavel + areaVegetacao ≤ areaTotal`
+- Todas as áreas devem ser valores positivos
+- Cidade e Estado são obrigatórios
+- Cada fazenda pertence a um produtor
+
+### Culturas e Safras
+
+- Fazendas podem ter múltiplas culturas
+- Cada cultura está associada a uma safra específica
+- Culturas disponíveis: Soja, Milho, Algodão, Café, Cana de Açúcar
+
+### Dashboard
+
+- Estatísticas calculadas em tempo real
+- Gráficos por estado, cultura e uso do solo
+- Totais de fazendas, hectares e produtores
+
+📖 **[Ver regras detalhadas →](./docs/test-requirements.md)**
+
+---
+
+## ✨ Funcionalidades
+
+- ✅ **CRUD Completo** - Produtores, Fazendas, Culturas e Safras
 - ✅ **Dashboard Analítico** - Gráficos e estatísticas em tempo real
-- ✅ **API REST** - Endpoints documentados com OpenAPI
-- ✅ **Validações de Negócio** - Regras aplicadas no backend e frontend
-
-📖 **[Ver requisitos completos →](./docs/test-requirements.md)**
+- ✅ **Validações** - Frontend e Backend com feedback em tempo real
+- ✅ **API REST** - Endpoints documentados com OpenAPI/Swagger
+- ✅ **Sistema de Notificações** - Toast messages e diálogos de confirmação
+- ✅ **Responsividade** - Interface adaptável a diferentes dispositivos
 
 ---
 
@@ -86,237 +139,73 @@ yarn dev
 
 ---
 
-## 🏗️ Tecnologias
+## 🏗️ Stack Tecnológica
 
-### Frontend
+### Core
 
-- **Next.js 16** - Framework React com SSR
-- **React 19** - Biblioteca UI
-- **TypeScript** - Tipagem estática
-- **Styled Components** - CSS-in-JS
-- **React Query** - Gerenciamento de estado servidor
-- **React Hook Form + Zod** - Formulários e validação
-- **Recharts** - Gráficos e visualizações
-
-### Backend
-
-- **Next.js API Routes** - API REST
-- **Prisma ORM** - ORM TypeScript-first
-- **PostgreSQL** - Banco de dados relacional
-- **Zod** - Validação de schemas
-
-### DevOps & Qualidade
-
-- **Docker + Docker Compose** - Containerização
-- **Jest** - Testes unitários
-- **React Testing Library** - Testes de componentes
-- **ESLint** - Linting
-- **GitHub Actions** - CI/CD Pipeline
-- **Vercel** - Deploy automático
-
-📖 **[Ver arquitetura completa →](./docs/architecture/fsd.md)**
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Prisma ORM** + **PostgreSQL**
+- **Styled Components** + **React Query** + **React Hook Form + Zod**
 
 ---
 
-## 📁 Estrutura do Projeto
+## 📁 Estrutura
 
 ```
 brain-agriculture/
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes (Backend)
-│   ├── dashboard/         # Página do Dashboard
-│   └── producers/         # Página de Produtores
+├── app/              # Next.js App Router + API Routes
 ├── src/
-│   ├── entities/          # Entidades de negócio (Producer, Farm, Crop)
-│   ├── features/          # Funcionalidades (Dashboard, Forms)
-│   ├── pages/             # Páginas compostas (FSD)
-│   ├── widgets/           # Componentes complexos reutilizáveis
-│   └── shared/            # UI, utils, theme
-├── prisma/                # Schema e seeds do banco
-├── docs/                  # 📚 Documentação completa
-└── docker-compose.yml     # Docker setup
+│   ├── entities/    # 📦 Lógica de domínio (Producer, Farm, Crop)
+│   ├── features/    # ⚡ Funcionalidades de negócio
+│   ├── page-compositions/  # 📄 Composição de páginas
+│   ├── widgets/     # 🧩 Componentes complexos
+│   └── shared/      # 🔧 UI, utils, contexts
+├── prisma/          # Schema do banco
+├── docs/            # 📚 Documentação
+└── scripts/         # Scripts de setup
 ```
 
-**Arquitetura**: [Feature-Sliced Design (FSD)](./docs/architecture/fsd.md)
-
----
-
-## 🗄️ Banco de Dados
-
-### Estrutura
-
-- **producers** - Produtores rurais (CPF/CNPJ, nome)
-- **farms** - Fazendas (áreas, localização)
-- **crops** - Culturas (Soja, Milho, Café, etc.)
-- **harvests** - Safras (2021, 2022, 2023)
-- **farm_crops** - Relacionamento fazenda-cultura-safra
-
-### Ferramentas
-
-```bash
-# Prisma Studio (Interface web)
-yarn db:studio
-
-# DBeaver / pgAdmin
-# Host: localhost:5432
-# Database: brain_agriculture
-# User: postgres / Password: password
-```
-
-📖 **[Guia do banco de dados →](./docs/setup/database.md)**
+📖 **[Estrutura detalhada e padrões →](./docs/architecture.md)**
 
 ---
 
 ## 🔌 API
 
-### Endpoints Principais
+API REST documentada com OpenAPI 3.0:
+
+**Recursos disponíveis:**
+
+- Produtores (CRUD)
+- Fazendas (CRUD)
+- Culturas (CRUD)
+- Safras (CRUD)
+- Associações Fazenda-Cultura (CRUD)
+- Dashboard (Estatísticas)
 
 ```bash
-# Produtores
-GET    /api/producers
-POST   /api/producers
-PUT    /api/producers/[id]
-DELETE /api/producers/[id]
-
-# Fazendas
-GET    /api/farms
-POST   /api/farms
-PUT    /api/farms/[id]
-DELETE /api/farms/[id]
-
-# Dashboard
-GET    /api/dashboard/stats
-
-# Culturas & Safras
-GET    /api/crops
-GET    /api/harvests
+# Acessar Swagger UI
+http://localhost:3000/api-docs
 ```
 
-### Exemplo de Uso
-
-```typescript
-// Buscar produtores
-const response = await fetch('/api/producers');
-const { data, count } = await response.json();
-
-// Criar fazenda
-await fetch('/api/farms', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    producerId: 'xxx',
-    name: 'Fazenda Exemplo',
-    city: 'São Paulo',
-    state: 'SP',
-    totalArea: 1000,
-    arableArea: 800,
-    vegetationArea: 200,
-  }),
-});
-```
-
-📖 **[Documentação completa da API →](./docs/api/)** | **[OpenAPI Spec →](./docs/api/openapi.yaml)**
+📖 **[Documentação da API →](./docs/api-reference.md)** | **[OpenAPI Spec →](./public/openapi.yaml)** | **[Swagger UI →](http://localhost:3000/api-docs)**
 
 ---
 
-### Executar Testes
+## 📚 Documentação
 
-```bash
-# Todos os testes
-yarn test
+| Documento                                        | Descrição                                  |
+| ------------------------------------------------ | ------------------------------------------ |
+| **[🚀 Quick Start](./docs/quick-start.md)**      | Guia rápido de instalação e configuração   |
+| **[🏗️ Arquitetura](./docs/architecture.md)**     | Feature-Sliced Design e padrões do projeto |
+| **[📊 Diagramas](./docs/diagrams.md)**           | Visualizações Mermaid da arquitetura       |
+| **[🔌 API Reference](./docs/api-reference.md)**  | Documentação completa da API REST          |
+| **[📋 Requisitos](./docs/test-requirements.md)** | Especificação e regras de negócio          |
+| **[🤝 Contribuindo](./docs/contributing.md)**    | Guia para contribuidores                   |
 
-# Com cobertura
-yarn test:coverage
+**Recursos adicionais:**
 
-# Modo watch
-yarn test:watch
-```
-
----
-
-### 🏗️ Arquitetura
-
-| Documento                                               | Descrição              |
-| ------------------------------------------------------- | ---------------------- |
-| **[Feature-Sliced Design](./docs/architecture/fsd.md)** | Arquitetura do projeto |
-| **[Diagramas](./docs/architecture/diagrams/)**          | Diagramas visuais      |
-
-### 🔌 API & Integrações
-
-| Documento                                      | Descrição            |
-| ---------------------------------------------- | -------------------- |
-| **[Referência da API](./docs/api/)**           | Endpoints e exemplos |
-| **[OpenAPI/Swagger](./docs/api/openapi.yaml)** | Spec completa        |
-
-### 🤝 Contribuição
-
-| Documento                                                  | Descrição       |
-| ---------------------------------------------------------- | --------------- |
-| **[Guia de Contribuição](./docs/project/contributing.md)** | Como contribuir |
-
----
-
-## 🐳 Docker
-
-### Comandos Principais
-
-```bash
-# Iniciar (produção)
-docker compose up --build
-
-# Iniciar (desenvolvimento com hot reload)
-docker compose -f docker-compose.dev.yml up
-
-# Parar
-docker compose down
-
-# Ver logs
-docker compose logs -f
-
-# Resetar banco
-docker compose down -v
-docker compose up --build
-```
-
-📖 **[Guia completo de Docker →](./docs/setup/docker.md)**
-
----
-
-## 📊 Scripts Disponíveis
-
-```bash
-# Desenvolvimento
-yarn dev              # Servidor de desenvolvimento
-yarn build            # Build de produção
-yarn start            # Servidor de produção
-yarn lint             # Linter
-
-# Banco de Dados
-yarn db:generate      # Gera Prisma client
-yarn db:push          # Aplica schema ao banco
-yarn db:seed          # Popula dados (se vazio)
-yarn db:reset         # ⚠️ Apaga e repopula
-yarn db:studio        # Prisma Studio
-
-# Testes
-yarn test             # Todos os testes
-yarn test:watch       # Modo watch
-yarn test:coverage    # Com cobertura
-```
-
----
-
-## ❓ Precisa de Ajuda?
-
-### Recursos Rápidos
-
-- 📖 **[Documentação Completa](./docs/)** - Central de docs
-
----
-
-## 📝 Licença
-
-Este projeto foi desenvolvido como parte de um teste técnico.
+- [OpenAPI Spec](./public/openapi.yaml) - Especificação OpenAPI 3.0
+- [Swagger UI](http://localhost:3000/api-docs) - Interface interativa da API
 
 ---
 
