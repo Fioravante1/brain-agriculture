@@ -1,4 +1,5 @@
 import { FarmCrop } from '@/entities/farm-crop';
+import { formatDateUTC } from '@/shared/lib/utils/format';
 
 export const FARM_CROPS_TABLE_COLUMNS = [
   {
@@ -29,7 +30,7 @@ export const FARM_CROPS_TABLE_COLUMNS = [
     key: 'createdAt',
     header: 'Criada em',
     width: '10%',
-    render: (farmCrop: FarmCrop) => new Date(farmCrop.createdAt).toLocaleDateString('pt-BR'),
+    render: (farmCrop: FarmCrop) => formatDateUTC(farmCrop.createdAt),
   },
   {
     key: 'actions',

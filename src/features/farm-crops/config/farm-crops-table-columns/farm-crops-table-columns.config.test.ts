@@ -1,4 +1,5 @@
 import { FARM_CROPS_TABLE_COLUMNS } from './farm-crops-table-columns.config';
+import { formatDateUTC } from '@/shared/lib/utils/format';
 
 describe('FARM_CROPS_TABLE_COLUMNS', () => {
   it('deve ter estrutura correta das colunas', () => {
@@ -208,13 +209,14 @@ describe('FARM_CROPS_TABLE_COLUMNS', () => {
   });
 
   it('deve renderizar data de criação corretamente', () => {
+    const date = new Date('2021-01-01T00:00:00.000Z');
     const farmCrop = {
       id: '1',
       farmId: '1',
       cropId: '1',
       harvestId: '1',
-      createdAt: new Date('2021-01-01T00:00:00.000Z'),
-      updatedAt: new Date('2021-01-01T00:00:00.000Z'),
+      createdAt: date,
+      updatedAt: date,
       farm: {
         id: '1',
         producerId: '1',
@@ -234,20 +236,20 @@ describe('FARM_CROPS_TABLE_COLUMNS', () => {
       crop: {
         id: '1',
         name: 'Soja',
-        createdAt: new Date('2021-01-01T00:00:00.000Z'),
-        updatedAt: new Date('2021-01-01T00:00:00.000Z'),
+        createdAt: date,
+        updatedAt: date,
       },
       harvest: {
         id: '1',
         name: 'Safra 2021',
         year: 2021,
-        createdAt: new Date('2021-01-01T00:00:00.000Z'),
-        updatedAt: new Date('2021-01-01T00:00:00.000Z'),
+        createdAt: date,
+        updatedAt: date,
       },
     };
 
     const result = FARM_CROPS_TABLE_COLUMNS[4].render!(farmCrop);
-    expect(result).toBe('31/12/2020');
+    expect(result).toBe(formatDateUTC(date));
   });
 
   it('deve renderizar ações corretamente', () => {
