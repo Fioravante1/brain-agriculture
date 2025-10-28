@@ -46,7 +46,7 @@ DOCKER_COMPOSE=${DOCKER_COMPOSE:-docker-compose}
 echo ""
 echo "📋 Escolha o modo de execução:"
 echo "1) Produção (build otimizado)"
-echo "2) Desenvolvimento (hot reload)"
+echo "2) Desenvolvimento"
 read -p "Opção (1 ou 2): " mode
 
 case $mode in
