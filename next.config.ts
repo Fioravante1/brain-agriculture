@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   compiler: {
     reactRemoveProperties: true,
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push({
+        '@prisma/client': '@prisma/client',
+        '.prisma/client': '.prisma/client',
+      });
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
