@@ -34,17 +34,20 @@ jest.mock('@/entities/crop', () => ({
   })),
 }));
 
-// Mock do window.confirm
 const mockConfirm = jest.fn();
-Object.defineProperty(window, 'confirm', {
-  value: mockConfirm,
-  writable: true,
-});
+
+jest.mock('@/shared/lib', () => ({
+  ...jest.requireActual('@/shared/lib'),
+  useConfirm: () => mockConfirm,
+  useToast: () => ({
+    showToast: jest.fn(),
+  }),
+}));
 
 describe('Componente CropsListPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockConfirm.mockReturnValue(true);
+    mockConfirm.mockResolvedValue(true);
   });
 
   it('deve renderizar página com título e subtítulo', () => {
@@ -159,7 +162,13 @@ describe('Componente CropsListPage', () => {
     const deleteButtons = screen.getAllByText('Excluir');
     fireEvent.click(deleteButtons[0]);
 
-    expect(mockConfirm).toHaveBeenCalledWith('Tem certeza que deseja excluir esta cultura?');
+    expect(mockConfirm).toHaveBeenCalledWith({
+      title: 'Excluir Cultura',
+      message: 'Tem certeza que deseja excluir esta cultura? Esta ação não pode ser desfeita.',
+      confirmText: 'Sim, excluir',
+      cancelText: 'Cancelar',
+      variant: 'danger',
+    });
   });
 
   it('deve renderizar com estrutura HTML correta', () => {
