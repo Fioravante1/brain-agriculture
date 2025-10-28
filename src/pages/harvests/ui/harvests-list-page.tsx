@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Card, Button, Table, Modal } from '@/shared/ui';
 import { HarvestForm, useHarvestsListPage } from '@/features/harvests';
 import { HARVESTS_TABLE_COLUMNS } from '@/features/harvests/config/harvests-table-columns';
+import { Harvest } from '@/entities/harvest';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -65,7 +66,7 @@ export function HarvestsListPage() {
       key: 'actions',
       header: 'Ações',
       width: '20%',
-      render: (harvest: any) => (
+      render: (harvest: Harvest) => (
         <ActionsCell>
           <Button variant='outline' size='sm' onClick={() => handleOpenEditModal(harvest)}>
             Editar
@@ -105,7 +106,12 @@ export function HarvestsListPage() {
         <Table data={harvests || []} columns={columns} loading={isLoading} emptyMessage='Nenhuma safra cadastrada' />
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingHarvest ? 'Editar Safra' : 'Nova Safra'} size='md'>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingHarvest ? 'Editar Safra' : 'Nova Safra'}
+        size='md'
+      >
         <HarvestForm
           defaultValues={editingHarvest ? { name: editingHarvest.name, year: editingHarvest.year } : undefined}
           onSubmit={handleSubmit}

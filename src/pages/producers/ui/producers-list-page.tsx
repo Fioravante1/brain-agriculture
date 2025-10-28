@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Card, Button, Table, Modal } from '@/shared/ui';
 import { ProducerForm, useProducersListPage } from '@/features/producers';
 import { PRODUCERS_TABLE_COLUMNS } from '@/features/producers/config';
+import { Producer } from '@/entities/producer';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -67,12 +68,17 @@ export function ProducersListPage() {
       key: 'actions',
       header: 'Ações',
       width: '15%',
-      render: (producer: any) => (
+      render: (producer: Producer) => (
         <ActionsCell>
           <Button size='sm' variant='outline' onClick={() => handleOpenEditModal(producer)}>
             Editar
           </Button>
-          <Button size='sm' variant='danger' onClick={() => handleDelete(producer.id)} disabled={deleteProducer.isPending}>
+          <Button
+            size='sm'
+            variant='danger'
+            onClick={() => handleDelete(producer.id)}
+            disabled={deleteProducer.isPending}
+          >
             Excluir
           </Button>
         </ActionsCell>
@@ -110,7 +116,11 @@ export function ProducersListPage() {
         <Table data={producers || []} columns={columns} loading={isLoading} emptyMessage='Nenhum produtor cadastrado' />
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingProducer ? 'Editar Produtor' : 'Novo Produtor'}>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingProducer ? 'Editar Produtor' : 'Novo Produtor'}
+      >
         <ProducerForm
           defaultValues={editingProducer ? { cpfCnpj: editingProducer.cpfCnpj, name: editingProducer.name } : undefined}
           onSubmit={handleSubmit}

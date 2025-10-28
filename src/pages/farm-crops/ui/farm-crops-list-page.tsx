@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Card, Button, Table, Modal } from '@/shared/ui';
 import { FarmCropForm, useFarmCropsListPage } from '@/features/farm-crops';
 import { FARM_CROPS_TABLE_COLUMNS } from '@/features/farm-crops/config/farm-crops-table-columns';
+import { FarmCrop } from '@/entities/farm-crop';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -63,7 +64,7 @@ export function FarmCropsListPage() {
       key: 'actions',
       header: 'Ações',
       width: '5%',
-      render: (farmCrop: any) => (
+      render: (farmCrop: FarmCrop) => (
         <ActionsCell>
           <Button variant='danger' size='sm' onClick={() => handleDelete(farmCrop)}>
             Excluir
@@ -100,7 +101,12 @@ export function FarmCropsListPage() {
       </PageHeader>
 
       <Card padding='lg'>
-        <Table data={farmCrops || []} columns={columns} loading={isLoading} emptyMessage='Nenhuma associação cadastrada' />
+        <Table
+          data={farmCrops || []}
+          columns={columns}
+          loading={isLoading}
+          emptyMessage='Nenhuma associação cadastrada'
+        />
       </Card>
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title='Nova Associação' size='lg'>

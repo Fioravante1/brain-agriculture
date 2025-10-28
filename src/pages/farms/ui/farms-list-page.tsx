@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Card, Button, Table, Modal } from '@/shared/ui';
 import { FarmForm, useFarmsListPage } from '@/features/farms';
 import { FARMS_TABLE_COLUMNS } from '@/features/farms/config/farms-table-columns';
+import { Farm } from '@/entities/farm';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -66,7 +67,7 @@ export function FarmsListPage() {
       key: 'actions',
       header: 'Ações',
       width: '4%',
-      render: (farm: any) => (
+      render: (farm: Farm) => (
         <ActionsCell>
           <Button variant='outline' size='sm' onClick={() => handleOpenEditModal(farm)}>
             Editar

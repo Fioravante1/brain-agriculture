@@ -1,12 +1,4 @@
-/**
- * Cultura plantada em uma fazenda em determinada safra
- */
-export interface FarmCrop {
-  id: string;
-  farmId: string;
-  harvestId: string;
-  cropId: string;
-}
+import { FarmCrop } from '@/entities/farm-crop';
 
 /**
  * Fazenda / Propriedade Rural

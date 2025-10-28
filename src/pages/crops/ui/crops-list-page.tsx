@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Card, Button, Table, Modal } from '@/shared/ui';
 import { CropForm, useCropsListPage } from '@/features/crops';
 import { CROPS_TABLE_COLUMNS } from '@/features/crops/config/crops-table-columns';
+import { Crop } from '@/entities/crop';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -65,7 +66,7 @@ export function CropsListPage() {
       key: 'actions',
       header: 'Ações',
       width: '20%',
-      render: (crop: any) => (
+      render: (crop: Crop) => (
         <ActionsCell>
           <Button variant='outline' size='sm' onClick={() => handleOpenEditModal(crop)}>
             Editar
@@ -105,7 +106,12 @@ export function CropsListPage() {
         <Table data={crops || []} columns={columns} loading={isLoading} emptyMessage='Nenhuma cultura cadastrada' />
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingCrop ? 'Editar Cultura' : 'Nova Cultura'} size='md'>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingCrop ? 'Editar Cultura' : 'Nova Cultura'}
+        size='md'
+      >
         <CropForm
           defaultValues={editingCrop ? { name: editingCrop.name } : undefined}
           onSubmit={handleSubmit}
