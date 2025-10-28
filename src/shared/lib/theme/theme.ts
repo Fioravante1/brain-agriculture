@@ -10,8 +10,10 @@ export const theme = {
 
     background: '#F5F5F5',
     surface: '#FFFFFF',
+    white: '#FFFFFF',
 
     error: '#D32F2F',
+    danger: '#D32F2F',
     warning: '#F57C00',
     success: '#388E3C',
     info: '#1976D2',
@@ -22,6 +24,7 @@ export const theme = {
       disabled: '#BDBDBD',
       inverse: '#FFFFFF',
     },
+    textSecondary: '#757575',
 
     border: '#E0E0E0',
     divider: '#EEEEEE',

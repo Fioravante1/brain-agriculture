@@ -2,8 +2,15 @@ import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useCropsListPage } from './use-crops-list-page.hook';
 import { useCrops, useCreateCrop, useUpdateCrop, useDeleteCrop, Crop } from '@/entities/crop';
+import { ToastProvider } from '@/shared/lib/contexts/toast-context';
+import { ConfirmProvider } from '@/shared/lib/contexts/confirm-context';
+import { ThemeProvider } from 'styled-components';
+import { theme } from '@/shared/lib/theme';
 
 const mockPush = jest.fn();
+const mockConfirm = jest.fn();
+const mockShowToast = jest.fn();
+
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
@@ -18,9 +25,25 @@ jest.mock('@/entities/crop', () => ({
   CropFormValues: jest.fn(),
 }));
 
+jest.mock('@/shared/lib', () => ({
+  ...jest.requireActual('@/shared/lib'),
+  useConfirm: () => mockConfirm,
+  useToast: () => ({
+    showToast: mockShowToast,
+  }),
+}));
+
 const createWrapper = () => {
   const queryClient = new QueryClient();
-  const Wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ThemeProvider theme={theme}>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <ConfirmProvider>{children}</ConfirmProvider>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
   Wrapper.displayName = 'TestWrapper';
   return Wrapper;
 };
@@ -48,6 +71,7 @@ const mockCrops: Crop[] = [
 
 describe('useCropsListPage', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     (useCrops as jest.Mock).mockReturnValue({
       data: mockCrops,
       isLoading: false,
@@ -55,8 +79,7 @@ describe('useCropsListPage', () => {
     (useCreateCrop as jest.Mock).mockReturnValue({ mutate: jest.fn(), isPending: false });
     (useUpdateCrop as jest.Mock).mockReturnValue({ mutate: jest.fn(), isPending: false });
     (useDeleteCrop as jest.Mock).mockReturnValue({ mutate: jest.fn(), isPending: false });
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
-    jest.spyOn(window, 'alert').mockImplementation(() => {});
+    mockConfirm.mockResolvedValue(true);
   });
 
   describe('Estado inicial', () => {
@@ -209,32 +232,40 @@ describe('useCropsListPage', () => {
   });
 
   describe('Exclusão de cultura', () => {
-    it('deve chamar deleteCrop.mutate quando confirmado', () => {
+    it('deve chamar deleteCrop.mutate quando confirmado', async () => {
       const mockMutate = jest.fn();
       (useDeleteCrop as jest.Mock).mockReturnValue({ mutate: mockMutate, isPending: false });
+      mockConfirm.mockResolvedValue(true);
 
       const { result } = renderHook(() => useCropsListPage(), {
         wrapper: createWrapper(),
       });
 
-      act(() => {
-        result.current.handleDelete('1');
+      await act(async () => {
+        await result.current.handleDelete('1');
       });
 
+      expect(mockConfirm).toHaveBeenCalledWith({
+        title: 'Excluir Cultura',
+        message: 'Tem certeza que deseja excluir esta cultura? Esta ação não pode ser desfeita.',
+        confirmText: 'Sim, excluir',
+        cancelText: 'Cancelar',
+        variant: 'danger',
+      });
       expect(mockMutate).toHaveBeenCalledWith('1');
     });
 
-    it('não deve chamar deleteCrop.mutate quando cancelado', () => {
+    it('não deve chamar deleteCrop.mutate quando cancelado', async () => {
       const mockMutate = jest.fn();
       (useDeleteCrop as jest.Mock).mockReturnValue({ mutate: mockMutate, isPending: false });
-      jest.spyOn(window, 'confirm').mockReturnValue(false);
+      mockConfirm.mockResolvedValue(false);
 
       const { result } = renderHook(() => useCropsListPage(), {
         wrapper: createWrapper(),
       });
 
-      act(() => {
-        result.current.handleDelete('1');
+      await act(async () => {
+        await result.current.handleDelete('1');
       });
 
       expect(mockMutate).not.toHaveBeenCalled();
@@ -545,16 +576,17 @@ describe('useCropsListPage', () => {
       expect(result.current.crops).toEqual([]);
     });
 
-    it('deve lidar com ID vazio na exclusão', () => {
+    it('deve lidar com ID vazio na exclusão', async () => {
       const mockMutate = jest.fn();
       (useDeleteCrop as jest.Mock).mockReturnValue({ mutate: mockMutate, isPending: false });
+      mockConfirm.mockResolvedValue(true);
 
       const { result } = renderHook(() => useCropsListPage(), {
         wrapper: createWrapper(),
       });
 
-      act(() => {
-        result.current.handleDelete('');
+      await act(async () => {
+        await result.current.handleDelete('');
       });
 
       expect(mockMutate).toHaveBeenCalledWith('');

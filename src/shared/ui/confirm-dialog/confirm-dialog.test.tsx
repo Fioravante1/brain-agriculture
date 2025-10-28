@@ -1,10 +1,17 @@
-import { renderWithTheme, screen, fireEvent } from '../../lib/test-utils';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ThemeProvider } from 'styled-components';
+import { theme } from '@/shared/lib/theme';
 import { ConfirmDialog } from './confirm-dialog';
-import { useConfirmState } from '../../lib/contexts/confirm-context';
 
-jest.mock('../../lib/contexts/confirm-context');
+const mockUseConfirmState = jest.fn();
 
-const mockUseConfirmState = useConfirmState as jest.MockedFunction<typeof useConfirmState>;
+jest.mock('@/shared/lib/contexts/confirm-context', () => ({
+  useConfirmState: () => mockUseConfirmState(),
+}));
+
+const renderWithTheme = (component: React.ReactElement) => {
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
+};
 
 const defaultState = {
   isOpen: true,
