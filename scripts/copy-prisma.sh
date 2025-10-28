@@ -4,17 +4,28 @@
 
 echo "📦 Copiando binários do Prisma..."
 
-# Encontrar o binary target correto
-BINARY_PATH=$(find node_modules/.prisma/client -name "libquery_engine-rhel-openssl-3.0.x.so.node" 2>/dev/null)
+# Criar diretório de destino
+mkdir -p .next/standalone/node_modules/.prisma/client
+mkdir -p .next/standalone/node_modules/@prisma/client
 
-if [ -z "$BINARY_PATH" ]; then
-  echo "⚠️  Binary não encontrado, pulando..."
-  exit 0
+# Copiar arquivos do .prisma/client
+if [ -d "node_modules/.prisma/client" ]; then
+  echo "📋 Copiando .prisma/client..."
+  cp -r node_modules/.prisma/client/* .next/standalone/node_modules/.prisma/client/ 2>/dev/null || true
 fi
 
-# Copiar para o local correto no build
-mkdir -p .next/standalone/node_modules/.prisma/client
-cp "$BINARY_PATH" .next/standalone/node_modules/.prisma/client/
+# Copiar arquivos do @prisma/client
+if [ -d "node_modules/@prisma/client" ]; then
+  echo "📋 Copiando @prisma/client..."
+  cp -r node_modules/@prisma/client/* .next/standalone/node_modules/@prisma/client/ 2>/dev/null || true
+fi
 
-echo "✅ Binary copiado para .next/standalone/node_modules/.prisma/client/"
+# Encontrar e copiar o binary específico
+BINARY_PATH=$(find node_modules/.prisma/client -name "libquery_engine-rhel-openssl-3.0.x.so.node" 2>/dev/null)
+if [ -n "$BINARY_PATH" ]; then
+  echo "📦 Copiando query engine..."
+  cp "$BINARY_PATH" .next/standalone/node_modules/.prisma/client/
+fi
+
+echo "✅ Binários do Prisma copiados com sucesso!"
 
