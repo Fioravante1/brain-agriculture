@@ -270,8 +270,8 @@ graph TB
     end
 
     subgraph "Backend"
-        API[/api/dashboard/stats]
-        AGG[Agregações]
+        API["API: /api/dashboard/stats"]
+        AGG["Agregações"]
     end
 
     subgraph "Database"
