@@ -4,13 +4,13 @@ import styled from 'styled-components';
 import { ButtonHTMLAttributes } from 'react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'warning';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
 }
 
 interface StyledButtonProps {
-  $variant: 'primary' | 'secondary' | 'outline' | 'danger';
+  $variant: 'primary' | 'secondary' | 'outline' | 'danger' | 'warning';
   $size: 'sm' | 'md' | 'lg';
   $fullWidth: boolean;
 }
@@ -74,6 +74,14 @@ const StyledButton = styled.button<StyledButtonProps>`
           color: ${theme.colors.text.inverse};
           &:hover:not(:disabled) {
             background-color: #B71C1C;
+          }
+        `;
+      case 'warning':
+        return `
+          background-color: ${theme.colors.warning};
+          color: ${theme.colors.text.inverse};
+          &:hover:not(:disabled) {
+            background-color: #E65100;
           }
         `;
       default:

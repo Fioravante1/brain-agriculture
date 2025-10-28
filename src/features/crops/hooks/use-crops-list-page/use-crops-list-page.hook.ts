@@ -2,41 +2,45 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCrops, useDeleteCrop, useCreateCrop, useUpdateCrop, Crop } from '@/entities/crop';
 import { CropFormValues } from '@/features/crops';
+import { useToast } from '@/shared';
+import { useConfirm } from '@/shared/lib';
 
 export function useCropsListPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<Crop | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
+  const confirm = useConfirm();
 
   const { data: crops, isLoading } = useCrops();
 
   const createCrop = useCreateCrop({
     onSuccess: () => {
-      alert('Cultura criada com sucesso!');
+      showToast('Cultura criada com sucesso!', 'success');
       setIsModalOpen(false);
     },
     onError: error => {
-      alert(`Erro ao criar cultura: ${error.message}`);
+      showToast(`Erro ao criar cultura: ${error.message}`, 'error');
     },
   });
 
   const updateCrop = useUpdateCrop({
     onSuccess: () => {
-      alert('Cultura atualizada com sucesso!');
+      showToast('Cultura atualizada com sucesso!', 'success');
       setIsModalOpen(false);
       setEditingCrop(null);
     },
     onError: error => {
-      alert(`Erro ao atualizar cultura: ${error.message}`);
+      showToast(`Erro ao atualizar cultura: ${error.message}`, 'error');
     },
   });
 
   const deleteCrop = useDeleteCrop({
     onSuccess: () => {
-      alert('Cultura excluída com sucesso!');
+      showToast('Cultura excluída com sucesso!', 'success');
     },
     onError: error => {
-      alert(`Erro ao excluir cultura: ${error.message}`);
+      showToast(`Erro ao excluir cultura: ${error.message}`, 'error');
     },
   });
 
@@ -63,8 +67,16 @@ export function useCropsListPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta cultura?')) {
+  const handleDelete = async (id: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir Cultura',
+      message: 'Tem certeza que deseja excluir esta cultura? Esta ação não pode ser desfeita.',
+      confirmText: 'Sim, excluir',
+      cancelText: 'Cancelar',
+      variant: 'danger',
+    });
+
+    if (confirmed) {
       deleteCrop.mutate(id);
     }
   };
