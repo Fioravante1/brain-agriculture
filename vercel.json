@@ -1,4 +1,9 @@
 {
   "buildCommand": "yarn prisma generate && yarn next build",
-  "installCommand": "yarn install"
+  "installCommand": "yarn install",
+  "functions": {
+    "app/**/*.{ts,tsx}": {
+      "includeFiles": "node_modules/.prisma/client/**"
+    }
+  }
 }
