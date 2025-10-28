@@ -1,13 +1,4 @@
 {
   "buildCommand": "prisma generate && next build",
-  "installCommand": "yarn install",
-  "env": {
-    "PRISMA_CLI_QUERY_ENGINE_TYPE": "binary"
-  },
-  "build": {
-    "env": {
-      "PRISMA_CLIENT_ENGINE_TYPE": "binary",
-      "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true"
-    }
-  }
+  "installCommand": "yarn install"
 }
