@@ -2,96 +2,76 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+/**
+ * Script para resetar o banco de dados e popular novamente
+ * Use este script quando quiser limpar todos os dados e começar do zero
+ *
+ * Uso:
+ *   yarn tsx prisma/reset-seed.ts
+ *   ou
+ *   docker compose exec app npx tsx prisma/reset-seed.ts
+ */
 async function main() {
-  console.log('🌱 Iniciando seed do banco de dados...');
+  console.log('⚠️  ATENÇÃO: Este script vai APAGAR todos os dados do banco!');
+  console.log('');
 
-  // Verificar se o banco já tem dados
-  const existingProducers = await prisma.producer.count();
-  const existingFarms = await prisma.farm.count();
+  // Deletar tudo em ordem (devido às foreign keys)
+  console.log('🗑️  Deletando dados existentes...');
 
-  if (existingProducers > 0 || existingFarms > 0) {
-    console.log('ℹ️  Banco de dados já contém dados. Pulando seed...');
-    console.log(`   - Produtores: ${existingProducers}`);
-    console.log(`   - Fazendas: ${existingFarms}`);
-    return;
-  }
+  await prisma.farmCrop.deleteMany({});
+  console.log('   ✅ FarmCrops deletados');
 
-  console.log('📝 Banco de dados vazio. Populando com dados iniciais...');
+  await prisma.farm.deleteMany({});
+  console.log('   ✅ Fazendas deletadas');
+
+  await prisma.producer.deleteMany({});
+  console.log('   ✅ Produtores deletados');
+
+  await prisma.harvest.deleteMany({});
+  console.log('   ✅ Safras deletadas');
+
+  await prisma.crop.deleteMany({});
+  console.log('   ✅ Culturas deletadas');
+
+  console.log('');
+  console.log('🌱 Populando banco de dados com dados novos...');
 
   // Criar culturas
   const crops = await Promise.all([
-    prisma.crop.upsert({
-      where: { name: 'Soja' },
-      update: {},
-      create: { name: 'Soja' },
-    }),
-    prisma.crop.upsert({
-      where: { name: 'Milho' },
-      update: {},
-      create: { name: 'Milho' },
-    }),
-    prisma.crop.upsert({
-      where: { name: 'Café' },
-      update: {},
-      create: { name: 'Café' },
-    }),
-    prisma.crop.upsert({
-      where: { name: 'Cana-de-açúcar' },
-      update: {},
-      create: { name: 'Cana-de-açúcar' },
-    }),
-    prisma.crop.upsert({
-      where: { name: 'Algodão' },
-      update: {},
-      create: { name: 'Algodão' },
-    }),
+    prisma.crop.create({ data: { name: 'Soja' } }),
+    prisma.crop.create({ data: { name: 'Milho' } }),
+    prisma.crop.create({ data: { name: 'Café' } }),
+    prisma.crop.create({ data: { name: 'Cana-de-açúcar' } }),
+    prisma.crop.create({ data: { name: 'Algodão' } }),
   ]);
 
   console.log('✅ Culturas criadas:', crops.length);
 
   // Criar safras
   const harvests = await Promise.all([
-    prisma.harvest.upsert({
-      where: { name: 'Safra 2021' },
-      update: {},
-      create: { name: 'Safra 2021', year: 2021 },
-    }),
-    prisma.harvest.upsert({
-      where: { name: 'Safra 2022' },
-      update: {},
-      create: { name: 'Safra 2022', year: 2022 },
-    }),
-    prisma.harvest.upsert({
-      where: { name: 'Safra 2023' },
-      update: {},
-      create: { name: 'Safra 2023', year: 2023 },
-    }),
+    prisma.harvest.create({ data: { name: 'Safra 2021', year: 2021 } }),
+    prisma.harvest.create({ data: { name: 'Safra 2022', year: 2022 } }),
+    prisma.harvest.create({ data: { name: 'Safra 2023', year: 2023 } }),
   ]);
 
   console.log('✅ Safras criadas:', harvests.length);
 
   // Criar produtores
   const producers = await Promise.all([
-    prisma.producer.upsert({
-      where: { cpfCnpj: '123.456.789-09' },
-      update: {},
-      create: {
+    prisma.producer.create({
+      data: {
         cpfCnpj: '123.456.789-09',
         name: 'João Silva',
       },
     }),
-    prisma.producer.upsert({
-      where: { cpfCnpj: '987.654.321-00' },
-      update: {},
-      create: {
+    prisma.producer.create({
+      data: {
         cpfCnpj: '987.654.321-00',
         name: 'Maria Santos',
       },
     }),
-    prisma.producer.upsert({
-      where: { cpfCnpj: '12.345.678/0001-90' },
-      update: {},
-      create: {
+    prisma.producer.create({
+      data: {
         cpfCnpj: '12.345.678/0001-90',
         name: 'Fazenda São José Ltda',
       },
@@ -197,13 +177,13 @@ async function main() {
   ]);
 
   console.log('✅ Relacionamentos fazenda-cultura-safra criados');
-
-  console.log('🎉 Seed concluído com sucesso!');
+  console.log('');
+  console.log('🎉 Banco resetado e populado com sucesso!');
 }
 
 main()
   .catch(e => {
-    console.error('❌ Erro durante o seed:', e);
+    console.error('❌ Erro durante o reset:', e);
     process.exit(1);
   })
   .finally(async () => {
