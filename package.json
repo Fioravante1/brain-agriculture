@@ -5,9 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate",
-    "build": "prisma generate && next build && ./scripts/copy-prisma.sh",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "vercel-build": "prisma generate && next build && ./scripts/copy-prisma.sh",
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
