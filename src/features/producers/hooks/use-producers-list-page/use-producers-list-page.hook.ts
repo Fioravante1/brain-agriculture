@@ -2,41 +2,45 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProducers, useDeleteProducer, useCreateProducer, useUpdateProducer, Producer } from '@/entities/producer';
 import { ProducerFormValues } from '@/features/producers';
+import { useToast } from '@/shared';
+import { useConfirm } from '@/shared/lib';
 
 export function useProducersListPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProducer, setEditingProducer] = useState<Producer | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
+  const confirm = useConfirm();
 
   const { data: producers, isLoading } = useProducers();
 
   const createProducer = useCreateProducer({
     onSuccess: () => {
-      alert('Produtor criado com sucesso!');
+      showToast('Produtor criado com sucesso!', 'success');
       setIsModalOpen(false);
     },
     onError: error => {
-      alert(`Erro ao criar produtor: ${error.message}`);
+      showToast(`Erro ao criar produtor: ${error.message}`, 'error');
     },
   });
 
   const updateProducer = useUpdateProducer({
     onSuccess: () => {
-      alert('Produtor atualizado com sucesso!');
+      showToast('Produtor atualizado com sucesso!', 'success');
       setIsModalOpen(false);
       setEditingProducer(null);
     },
     onError: error => {
-      alert(`Erro ao atualizar produtor: ${error.message}`);
+      showToast(`Erro ao atualizar produtor: ${error.message}`, 'error');
     },
   });
 
   const deleteProducer = useDeleteProducer({
     onSuccess: () => {
-      alert('Produtor excluído com sucesso!');
+      showToast('Produtor excluído com sucesso!', 'success');
     },
     onError: error => {
-      alert(`Erro ao excluir produtor: ${error.message}`);
+      showToast(`Erro ao excluir produtor: ${error.message}`, 'error');
     },
   });
 
@@ -63,8 +67,16 @@ export function useProducersListPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este produtor?')) {
+  const handleDelete = async (id: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir Produtor',
+      message: 'Tem certeza que deseja excluir este produtor? Esta ação não pode ser desfeita.',
+      confirmText: 'Sim, excluir',
+      cancelText: 'Cancelar',
+      variant: 'danger',
+    });
+
+    if (confirmed) {
       deleteProducer.mutate(id);
     }
   };

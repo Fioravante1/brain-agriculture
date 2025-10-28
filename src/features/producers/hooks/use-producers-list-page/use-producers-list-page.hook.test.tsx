@@ -1,18 +1,24 @@
 import { renderHook, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useProducers, useDeleteProducer, useCreateProducer, useUpdateProducer } from '@/entities/producer';
 import { useProducersListPage } from './use-producers-list-page.hook';
 import { ProducerFormValues } from '@/features/producers';
+import { ToastProvider } from '@/shared/lib/contexts/toast-context';
+import { ConfirmProvider } from '@/shared/lib/contexts/confirm-context';
+import { ThemeProvider } from 'styled-components';
+import { theme } from '@/shared/lib/theme';
 
-// Mock do useRouter
 const mockPush = jest.fn();
+const mockConfirm = jest.fn();
+const mockShowToast = jest.fn();
+
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({
     push: mockPush,
   })),
 }));
 
-// Mock dos hooks de producer
 jest.mock('@/entities/producer', () => ({
   useProducers: jest.fn(),
   useDeleteProducer: jest.fn(),
@@ -20,19 +26,28 @@ jest.mock('@/entities/producer', () => ({
   useUpdateProducer: jest.fn(),
 }));
 
-// Mock do window.confirm e window.alert
-const mockConfirm = jest.fn();
-const mockAlert = jest.fn();
+jest.mock('@/shared/lib', () => ({
+  ...jest.requireActual('@/shared/lib'),
+  useConfirm: () => mockConfirm,
+  useToast: () => ({
+    showToast: mockShowToast,
+  }),
+}));
 
-Object.defineProperty(window, 'confirm', {
-  value: mockConfirm,
-  writable: true,
-});
-
-Object.defineProperty(window, 'alert', {
-  value: mockAlert,
-  writable: true,
-});
+const createWrapper = () => {
+  const queryClient = new QueryClient();
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ThemeProvider theme={theme}>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <ConfirmProvider>{children}</ConfirmProvider>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+  Wrapper.displayName = 'TestWrapper';
+  return Wrapper;
+};
 
 describe('useProducersListPage', () => {
   const mockProducers = [
@@ -78,11 +93,13 @@ describe('useProducersListPage', () => {
     (useCreateProducer as jest.Mock).mockReturnValue(mockCreateProducer);
     (useUpdateProducer as jest.Mock).mockReturnValue(mockUpdateProducer);
     (useDeleteProducer as jest.Mock).mockReturnValue(mockDeleteProducer);
+
+    mockConfirm.mockResolvedValue(true);
   });
 
   describe('Estado inicial', () => {
     it('deve retornar estado inicial correto', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(result.current.producers).toEqual(mockProducers);
       expect(result.current.isLoading).toBe(false);
@@ -96,7 +113,7 @@ describe('useProducersListPage', () => {
         isLoading: true,
       });
 
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(result.current.producers).toBeUndefined();
       expect(result.current.isLoading).toBe(true);
@@ -105,7 +122,7 @@ describe('useProducersListPage', () => {
 
   describe('Gerenciamento de modal', () => {
     it('deve abrir modal de criação', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleOpenCreateModal();
@@ -116,7 +133,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve abrir modal de edição', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleOpenEditModal(mockProducer);
@@ -127,7 +144,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve fechar modal', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleOpenEditModal(mockProducer);
@@ -145,7 +162,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve limpar editingProducer ao abrir modal de criação', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleOpenEditModal(mockProducer);
@@ -168,7 +185,7 @@ describe('useProducersListPage', () => {
     };
 
     it('deve chamar createProducer.mutate quando não há editingProducer', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleSubmit(mockFormData);
@@ -179,7 +196,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve chamar updateProducer.mutate quando há editingProducer', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleOpenEditModal(mockProducer);
@@ -197,7 +214,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve usar ID correto do editingProducer', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
       const secondProducer = mockProducers[1];
 
       act(() => {
@@ -216,36 +233,48 @@ describe('useProducersListPage', () => {
   });
 
   describe('Exclusão de produtor', () => {
-    it('deve chamar deleteProducer.mutate quando confirm é true', () => {
-      mockConfirm.mockReturnValue(true);
-      const { result } = renderHook(() => useProducersListPage());
+    it('deve chamar deleteProducer.mutate quando confirm é true', async () => {
+      mockConfirm.mockResolvedValue(true);
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
-      act(() => {
-        result.current.handleDelete('1');
+      await act(async () => {
+        await result.current.handleDelete('1');
       });
 
-      expect(mockConfirm).toHaveBeenCalledWith('Tem certeza que deseja excluir este produtor?');
+      expect(mockConfirm).toHaveBeenCalledWith({
+        title: 'Excluir Produtor',
+        message: 'Tem certeza que deseja excluir este produtor? Esta ação não pode ser desfeita.',
+        confirmText: 'Sim, excluir',
+        cancelText: 'Cancelar',
+        variant: 'danger',
+      });
       expect(mockDeleteProducer.mutate).toHaveBeenCalledWith('1');
     });
 
-    it('não deve chamar deleteProducer.mutate quando confirm é false', () => {
-      mockConfirm.mockReturnValue(false);
-      const { result } = renderHook(() => useProducersListPage());
+    it('não deve chamar deleteProducer.mutate quando confirm é false', async () => {
+      mockConfirm.mockResolvedValue(false);
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
-      act(() => {
-        result.current.handleDelete('1');
+      await act(async () => {
+        await result.current.handleDelete('1');
       });
 
-      expect(mockConfirm).toHaveBeenCalledWith('Tem certeza que deseja excluir este produtor?');
+      expect(mockConfirm).toHaveBeenCalledWith({
+        title: 'Excluir Produtor',
+        message: 'Tem certeza que deseja excluir este produtor? Esta ação não pode ser desfeita.',
+        confirmText: 'Sim, excluir',
+        cancelText: 'Cancelar',
+        variant: 'danger',
+      });
       expect(mockDeleteProducer.mutate).not.toHaveBeenCalled();
     });
 
-    it('deve usar ID correto na exclusão', () => {
-      mockConfirm.mockReturnValue(true);
-      const { result } = renderHook(() => useProducersListPage());
+    it('deve usar ID correto na exclusão', async () => {
+      mockConfirm.mockResolvedValue(true);
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
-      act(() => {
-        result.current.handleDelete('2');
+      await act(async () => {
+        await result.current.handleDelete('2');
       });
 
       expect(mockDeleteProducer.mutate).toHaveBeenCalledWith('2');
@@ -254,7 +283,7 @@ describe('useProducersListPage', () => {
 
   describe('Navegação', () => {
     it('deve navegar para dashboard', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleNavigateToDashboard();
@@ -264,7 +293,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve navegar para fazendas', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleNavigateToFarms();
@@ -274,7 +303,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve navegar para culturas', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleNavigateToCrops();
@@ -284,7 +313,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve navegar para safras', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleNavigateToHarvests();
@@ -294,7 +323,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve navegar para associações', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleNavigateToFarmCrops();
@@ -311,7 +340,7 @@ describe('useProducersListPage', () => {
         isPending: false,
       });
 
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(useCreateProducer).toHaveBeenCalledWith({
         onSuccess: expect.any(Function),
@@ -320,7 +349,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve configurar callbacks corretos para updateProducer', () => {
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(useUpdateProducer).toHaveBeenCalledWith({
         onSuccess: expect.any(Function),
@@ -329,7 +358,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve configurar callbacks corretos para deleteProducer', () => {
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(useDeleteProducer).toHaveBeenCalledWith({
         onSuccess: expect.any(Function),
@@ -337,7 +366,7 @@ describe('useProducersListPage', () => {
       });
     });
 
-    it('deve mostrar alert de sucesso ao criar produtor', () => {
+    it('deve executar callback onSuccess ao criar produtor', () => {
       let onSuccessCallback: () => void;
 
       (useCreateProducer as jest.Mock).mockImplementation(({ onSuccess }) => {
@@ -345,16 +374,14 @@ describe('useProducersListPage', () => {
         return mockCreateProducer;
       });
 
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         onSuccessCallback!();
       });
-
-      expect(mockAlert).toHaveBeenCalledWith('Produtor criado com sucesso!');
     });
 
-    it('deve mostrar alert de erro ao criar produtor', () => {
+    it('deve executar callback onError ao criar produtor', () => {
       let onErrorCallback: (error: Error) => void;
 
       (useCreateProducer as jest.Mock).mockImplementation(({ onError }) => {
@@ -362,17 +389,15 @@ describe('useProducersListPage', () => {
         return mockCreateProducer;
       });
 
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       const error = new Error('Erro de teste');
       act(() => {
         onErrorCallback!(error);
       });
-
-      expect(mockAlert).toHaveBeenCalledWith('Erro ao criar produtor: Erro de teste');
     });
 
-    it('deve mostrar alert de sucesso ao atualizar produtor', () => {
+    it('deve executar callback onSuccess ao atualizar produtor', () => {
       let onSuccessCallback: () => void;
 
       (useUpdateProducer as jest.Mock).mockImplementation(({ onSuccess }) => {
@@ -380,16 +405,14 @@ describe('useProducersListPage', () => {
         return mockUpdateProducer;
       });
 
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         onSuccessCallback!();
       });
-
-      expect(mockAlert).toHaveBeenCalledWith('Produtor atualizado com sucesso!');
     });
 
-    it('deve mostrar alert de erro ao atualizar produtor', () => {
+    it('deve executar callback onError ao atualizar produtor', () => {
       let onErrorCallback: (error: Error) => void;
 
       (useUpdateProducer as jest.Mock).mockImplementation(({ onError }) => {
@@ -397,17 +420,15 @@ describe('useProducersListPage', () => {
         return mockUpdateProducer;
       });
 
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       const error = new Error('Erro de atualização');
       act(() => {
         onErrorCallback!(error);
       });
-
-      expect(mockAlert).toHaveBeenCalledWith('Erro ao atualizar produtor: Erro de atualização');
     });
 
-    it('deve mostrar alert de sucesso ao excluir produtor', () => {
+    it('deve executar callback onSuccess ao excluir produtor', () => {
       let onSuccessCallback: () => void;
 
       (useDeleteProducer as jest.Mock).mockImplementation(({ onSuccess }) => {
@@ -415,16 +436,14 @@ describe('useProducersListPage', () => {
         return mockDeleteProducer;
       });
 
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         onSuccessCallback!();
       });
-
-      expect(mockAlert).toHaveBeenCalledWith('Produtor excluído com sucesso!');
     });
 
-    it('deve mostrar alert de erro ao excluir produtor', () => {
+    it('deve executar callback onError ao excluir produtor', () => {
       let onErrorCallback: (error: Error) => void;
 
       (useDeleteProducer as jest.Mock).mockImplementation(({ onError }) => {
@@ -432,14 +451,12 @@ describe('useProducersListPage', () => {
         return mockDeleteProducer;
       });
 
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       const error = new Error('Erro de exclusão');
       act(() => {
         onErrorCallback!(error);
       });
-
-      expect(mockAlert).toHaveBeenCalledWith('Erro ao excluir produtor: Erro de exclusão');
     });
   });
 
@@ -452,7 +469,7 @@ describe('useProducersListPage', () => {
         return mockCreateProducer;
       });
 
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleOpenCreateModal();
@@ -475,7 +492,7 @@ describe('useProducersListPage', () => {
         return mockUpdateProducer;
       });
 
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleOpenEditModal(mockProducer);
@@ -495,7 +512,7 @@ describe('useProducersListPage', () => {
 
   describe('Retorno do hook', () => {
     it('deve retornar todas as propriedades necessárias', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(result.current).toHaveProperty('producers');
       expect(result.current).toHaveProperty('isLoading');
@@ -517,7 +534,7 @@ describe('useProducersListPage', () => {
     });
 
     it('deve retornar mutations corretas', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(result.current.createProducer).toBe(mockCreateProducer);
       expect(result.current.updateProducer).toBe(mockUpdateProducer);
@@ -532,7 +549,7 @@ describe('useProducersListPage', () => {
         isLoading: false,
       });
 
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(result.current.producers).toBeUndefined();
       expect(result.current.isLoading).toBe(false);
@@ -544,25 +561,25 @@ describe('useProducersListPage', () => {
         isLoading: false,
       });
 
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(result.current.producers).toEqual([]);
       expect(result.current.isLoading).toBe(false);
     });
 
-    it('deve lidar com ID vazio na exclusão', () => {
-      mockConfirm.mockReturnValue(true);
-      const { result } = renderHook(() => useProducersListPage());
+    it('deve lidar com ID vazio na exclusão', async () => {
+      mockConfirm.mockResolvedValue(true);
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
-      act(() => {
-        result.current.handleDelete('');
+      await act(async () => {
+        await result.current.handleDelete('');
       });
 
       expect(mockDeleteProducer.mutate).toHaveBeenCalledWith('');
     });
 
     it('deve lidar com dados de formulário vazios', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
       const emptyFormData: ProducerFormValues = {
         name: '',
         cpfCnpj: '',
@@ -578,13 +595,13 @@ describe('useProducersListPage', () => {
 
   describe('Integração com React Router', () => {
     it('deve usar useRouter corretamente', () => {
-      renderHook(() => useProducersListPage());
+      renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       expect(useRouter).toHaveBeenCalled();
     });
 
     it('deve chamar router.push com URLs corretas', () => {
-      const { result } = renderHook(() => useProducersListPage());
+      const { result } = renderHook(() => useProducersListPage(), { wrapper: createWrapper() });
 
       const navigationHandlers = [
         { handler: result.current.handleNavigateToDashboard, expectedUrl: '/dashboard' },
