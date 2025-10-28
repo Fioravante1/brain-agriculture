@@ -12,3 +12,5 @@ jest.config.ts
 **/*.spec.ts
 **/*.spec.tsx
 **/__tests__
+**/test-utils.tsx
+**/test-utils.ts

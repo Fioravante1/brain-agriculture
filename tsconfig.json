@@ -48,6 +48,8 @@
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/__tests__/**",
+    "**/test-utils.tsx",
+    "**/test-utils.ts",
     ".jest/**",
     "coverage/**"
   ]
