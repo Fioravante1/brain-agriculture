@@ -9,7 +9,6 @@ Sistema completo de gerenciamento de produtores rurais desenvolvido com **Next.j
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](./docs/quick-start.md)
 [![API](https://img.shields.io/badge/API-OpenAPI-green)](./docs/api-reference.md)
 [![CI Pipeline](https://github.com/fioravante1/brain-agriculture/actions/workflows/ci.yml/badge.svg)](https://github.com/fioravante1/brain-agriculture/actions/workflows/ci.yml)
-[![Deploy to Vercel](https://github.com/fioravante1/brain-agriculture/actions/workflows/deploy-vercel.yml/badge.svg)](https://github.com/fioravante1/brain-agriculture/actions/workflows/deploy-vercel.yml)
 
 [📚 Documentação](./docs/) • [🔌 API](./docs/api-reference.md) • [🏗️ Arquitetura](./docs/architecture.md)
 
