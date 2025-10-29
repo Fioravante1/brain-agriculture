@@ -1478,34 +1478,7 @@ const createProducer = useCreateProducer({
 
 **No Brain Agriculture**: Hooks em entities é mais simples e eficiente para CRUD básico
 
-### 3. localStorage em vez de Backend
-
-**Por quê:**
-
-- ✅ Teste técnico frontend-only
-- ✅ Simula API de forma realista (com delay)
-- ✅ Persistência entre recarregamentos
-- ✅ Fácil migração futura para API real
-
-**Implementação:**
-
-```typescript
-// shared/lib/storage/local-storage.ts
-const PREFIX = '@brain-agriculture:';
-
-export const localStorage = {
-  get: <T>(key: string): T | null => {
-    const value = window.localStorage.getItem(PREFIX + key);
-    return value ? JSON.parse(value) : null;
-  },
-
-  set: <T>(key: string, value: T): void => {
-    window.localStorage.setItem(PREFIX + key, JSON.stringify(value));
-  },
-};
-```
-
-### 4. Styled Components com Transient Props
+### 3. Styled Components com Transient Props
 
 **Problema**: React não reconhece props customizadas
 
@@ -1530,7 +1503,7 @@ export function Button({ variant, fullWidth, ...props }) {
 }
 ```
 
-### 5. Co-localização de Testes
+### 4. Co-localização de Testes
 
 **Decisão**: Testes ao lado do código
 
@@ -1547,7 +1520,7 @@ validate-cpf-cnpj/
 - ✅ Testes são parte do módulo
 - ✅ Exclusão de testes no tsconfig
 
-### 6. TypeScript Strict Mode
+### 5. TypeScript Strict Mode
 
 **Decisão**: TypeScript estrito, sem `any`
 
@@ -1558,7 +1531,7 @@ validate-cpf-cnpj/
 - ✅ Documentação via tipos
 - ✅ Refatoração segura
 
-### 7. Zod para Validação de Formulários
+### 6. Zod para Validação de Formulários
 
 **Decisão**: Zod + React Hook Form
 
