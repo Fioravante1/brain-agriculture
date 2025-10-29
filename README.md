@@ -16,6 +16,14 @@ Sistema completo de gerenciamento de produtores rurais desenvolvido com **Next.j
 
 ---
 
+## 🌐 Acesso à Aplicação
+
+A aplicação está disponível online e pode ser acessada através do link:
+
+**🔗 [https://brain-agriculture-delta.vercel.app/producers](https://brain-agriculture-delta.vercel.app/producers)**
+
+---
+
 ## 📋 Sobre o Projeto
 
 Sistema para gestão de produtores rurais, suas fazendas, culturas e safras. Desenvolvido seguindo **Feature-Sliced Design (FSD)** com foco em arquitetura limpa, código de qualidade e boas práticas de desenvolvimento.
